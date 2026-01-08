@@ -4,14 +4,13 @@ using UnityEngine;
 
 public class DoorHandle : MonoBehaviour
 {
-    public float rotateAngle = -30f;
-    public float rotateSpeed = 8f;
+    public float pressAngle = -30f;
+    public float speed = 6f;
 
     private Quaternion closedRotation;
     private Quaternion pressedRotation;
 
-    private bool isPressing = false;
-    private bool isReturning = false;
+    private bool isPressed = false;
 
     void Start()
     {
@@ -20,44 +19,28 @@ public class DoorHandle : MonoBehaviour
         pressedRotation = Quaternion.Euler(
             transform.localEulerAngles.x,
             transform.localEulerAngles.y,
-            transform.localEulerAngles.z + rotateAngle
+            transform.localEulerAngles.z + pressAngle
         );
     }
 
     void Update()
     {
-        if (isPressing)
-        {
-            transform.localRotation = Quaternion.Slerp(
-                transform.localRotation,
-                pressedRotation,
-                Time.deltaTime * rotateSpeed
-            );
+        Quaternion target = isPressed ? pressedRotation : closedRotation;
 
-            if (Quaternion.Angle(transform.localRotation, pressedRotation) < 1f)
-            {
-                isPressing = false;
-                isReturning = true;
-            }
-        }
-        else if (isReturning)
-        {
-            transform.localRotation = Quaternion.Slerp(
-                transform.localRotation,
-                closedRotation,
-                Time.deltaTime * rotateSpeed
-            );
-
-            if (Quaternion.Angle(transform.localRotation, closedRotation) < 1f)
-            {
-                isReturning = false;
-            }
-        }
+        transform.localRotation = Quaternion.Slerp(
+            transform.localRotation,
+            target,
+            Time.deltaTime * speed
+        );
     }
 
     public void PressHandle()
     {
-        isPressing = true;
-        isReturning = false;
+        isPressed = true;
+    }
+
+    public void CloseHandle()
+    {
+        isPressed = false;
     }
 }
