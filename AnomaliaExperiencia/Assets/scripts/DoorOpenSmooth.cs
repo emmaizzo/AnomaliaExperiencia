@@ -8,12 +8,12 @@ public class DoorOpenSmooth : MonoBehaviour
     public float speed = 2f;
 
     [Header("Audio")]
-    public AudioSource sfxSource;      // Para abrir/cerrar
-    public AudioSource bgSource;       // Para el audio de fondo (intro)
+    public AudioSource sfxSource;
+    public AudioSource bgSource;
     public AudioClip openSound;
     public AudioClip closeSound;
     public AudioClip introSound;
-    public AudioClip lockedSound;      // 🔒 sonido al intentar abrir puerta bloqueada
+    public AudioClip lockedSound;
 
     [Header("Optional")]
     public DoorHandle handle;
@@ -24,9 +24,13 @@ public class DoorOpenSmooth : MonoBehaviour
     private bool isOpen = false;
     private bool isLocked = true;
 
+    private bool wasOpen = false;
+    private bool closeSoundPlayed = false;
+
     void Start()
     {
         closedRotation = transform.rotation;
+
         openRotation = Quaternion.Euler(
             transform.eulerAngles.x,
             transform.eulerAngles.y + openAngle,
@@ -35,7 +39,7 @@ public class DoorOpenSmooth : MonoBehaviour
 
         if (introSound != null && bgSource != null)
         {
-            StartCoroutine(PlayIntroWithDelay(2f)); // empieza 2s después
+            StartCoroutine(PlayIntroWithDelay(2f));
         }
         else
         {
@@ -46,7 +50,25 @@ public class DoorOpenSmooth : MonoBehaviour
     void Update()
     {
         Quaternion target = isOpen ? openRotation : closedRotation;
-        transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * speed);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            target,
+            Time.deltaTime * speed
+        );
+
+        // 🔊 sonido de cierre SOLO al terminar de cerrar
+        if (!isOpen && wasOpen && !closeSoundPlayed)
+        {
+            if (Quaternion.Angle(transform.rotation, closedRotation) < 0.5f)
+            {
+                closeSoundPlayed = true;
+                wasOpen = false;
+
+                if (sfxSource != null && closeSound != null)
+                    sfxSource.PlayOneShot(closeSound);
+            }
+        }
     }
 
     void UnlockDoor()
@@ -60,20 +82,21 @@ public class DoorOpenSmooth : MonoBehaviour
 
         if (isLocked)
         {
-            // 🔒 reproducir sonido de puerta bloqueada
             if (sfxSource != null && lockedSound != null)
                 sfxSource.PlayOneShot(lockedSound);
             return;
         }
 
         isOpen = true;
+        wasOpen = true;
+        closeSoundPlayed = false;
 
         if (sfxSource != null && openSound != null)
             sfxSource.PlayOneShot(openSound);
 
-        // animación de manija: presiona y vuelve
+        // ✅ solo avisamos a la manija
         if (handle != null)
-            StartCoroutine(AnimateHandle());
+            handle.PressHandle();
     }
 
     public void CloseAndLockDoor()
@@ -82,12 +105,6 @@ public class DoorOpenSmooth : MonoBehaviour
 
         isOpen = false;
         isLocked = true;
-
-        if (sfxSource != null && closeSound != null)
-            sfxSource.PlayOneShot(closeSound);
-
-        if (handle != null)
-            handle.CloseHandle(); // vuelve a posición inicial
     }
 
     private IEnumerator PlayIntroWithDelay(float delay)
@@ -99,13 +116,5 @@ public class DoorOpenSmooth : MonoBehaviour
 
         yield return new WaitForSeconds(introSound.length);
         UnlockDoor();
-    }
-
-    // animación de la manija: presiona y vuelve automáticamente
-    private IEnumerator AnimateHandle()
-    {
-        handle.PressHandle();                  // presiona
-        yield return new WaitForSeconds(0.3f); // tiempo para el efecto
-        handle.CloseHandle();                  // vuelve
     }
 }

@@ -1,46 +1,59 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DoorHandle : MonoBehaviour
 {
     public float pressAngle = -30f;
-    public float speed = 6f;
+    public float speed = 10f;
+    public float holdTime = 0.25f;
+
+    [Header("Axis")]
+    public Vector3 localAxis = Vector3.forward; // ← editable
 
     private Quaternion closedRotation;
     private Quaternion pressedRotation;
 
-    private bool isPressed = false;
+    private Coroutine animRoutine;
 
     void Start()
     {
         closedRotation = transform.localRotation;
-
-        pressedRotation = Quaternion.Euler(
-            transform.localEulerAngles.x,
-            transform.localEulerAngles.y,
-            transform.localEulerAngles.z + pressAngle
-        );
-    }
-
-    void Update()
-    {
-        Quaternion target = isPressed ? pressedRotation : closedRotation;
-
-        transform.localRotation = Quaternion.Slerp(
-            transform.localRotation,
-            target,
-            Time.deltaTime * speed
-        );
+        pressedRotation = closedRotation * Quaternion.AngleAxis(pressAngle, localAxis);
     }
 
     public void PressHandle()
     {
-        isPressed = true;
+        if (animRoutine != null)
+            StopCoroutine(animRoutine);
+
+        animRoutine = StartCoroutine(HandleRoutine());
     }
 
-    public void CloseHandle()
+    private IEnumerator HandleRoutine()
     {
-        isPressed = false;
+        // bajar
+        while (Quaternion.Angle(transform.localRotation, pressedRotation) > 0.5f)
+        {
+            transform.localRotation = Quaternion.Slerp(
+                transform.localRotation,
+                pressedRotation,
+                Time.deltaTime * speed
+            );
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(holdTime);
+
+        // subir
+        while (Quaternion.Angle(transform.localRotation, closedRotation) > 0.5f)
+        {
+            transform.localRotation = Quaternion.Slerp(
+                transform.localRotation,
+                closedRotation,
+                Time.deltaTime * speed
+            );
+            yield return null;
+        }
     }
 }
