@@ -6,8 +6,11 @@ public class HazardSpike : MonoBehaviour
 {
     void OnTriggerEnter(Collider other)
     {
+        Debug.Log("Algo entro al pincho: " + other.name);
+
         if (!other.CompareTag("Player")) return;
 
-        StressManager.Instance.ResetScene();
+        Debug.Log("PLAYER TOCO PINCHOS");
+        ResetManager.Instance.ResetRoom();
     }
 }

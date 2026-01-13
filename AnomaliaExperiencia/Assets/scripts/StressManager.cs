@@ -5,12 +5,9 @@ public class StressManager : MonoBehaviour
 {
     public static StressManager Instance;
 
-    [Header("Stress")]
-    public int stressLevel = 0;
-
-    [Header("Wall Speed")]
-    public float baseWallSpeed = 0.2f;
-    public float speedPerStress = 0.15f;
+    public int stressLevel;
+    public float speedMultiplier = 1f;
+    public float speedIncreasePerTrigger = 0.3f;
 
     void Awake()
     {
@@ -23,15 +20,12 @@ public class StressManager : MonoBehaviour
     public void IncreaseStress()
     {
         stressLevel++;
+        speedMultiplier += speedIncreasePerTrigger;
     }
 
-    public float GetWallSpeed()
+    public void ResetStress()
     {
-        return baseWallSpeed + stressLevel * speedPerStress;
-    }
-
-    public void ResetScene()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        stressLevel = 0;
+        speedMultiplier = 1f;
     }
 }

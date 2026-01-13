@@ -4,34 +4,18 @@ using UnityEngine;
 
 public class ClosingWall : MonoBehaviour
 {
-    public enum MoveDirection { Forward, Backward }
-
     [Header("Movement")]
-    public MoveDirection direction;
-    public float directionMultiplier = 1f;
-    public float maxDistance = 3f;
-
-    private Vector3 startPos;
-
-    void Start()
-    {
-        startPos = transform.position;
-    }
+    public Vector3 moveDirection = Vector3.forward;
+    public float baseSpeed = 0.5f;
 
     void Update()
     {
-        if (StressManager.Instance == null) return;
+        // multiplicador global de stress
+        float stressMultiplier = 1f;
 
-        float speed = StressManager.Instance.GetWallSpeed() * directionMultiplier;
-        float move = speed * Time.deltaTime;
+        if (StressManager.Instance != null)
+            stressMultiplier = StressManager.Instance.speedMultiplier;
 
-        if (direction == MoveDirection.Forward)
-            transform.Translate(0f, 0f, move);
-        else
-            transform.Translate(0f, 0f, -move);
-
-        float dist = Vector3.Distance(startPos, transform.position);
-        if (dist >= maxDistance)
-            enabled = false;
+        transform.Translate(moveDirection * baseSpeed * stressMultiplier * Time.deltaTime, Space.World);
     }
 }

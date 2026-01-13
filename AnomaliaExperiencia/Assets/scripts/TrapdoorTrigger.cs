@@ -4,16 +4,32 @@ using UnityEngine;
 
 public class TrapdoorTrigger : MonoBehaviour
 {
-    bool used = false;
+    bool playerInside;
 
     void OnTriggerEnter(Collider other)
     {
-        if (used) return;
-        if (!other.CompareTag("Player")) return;
+        if (other.CompareTag("Player"))
+        {
+            playerInside = true;
+            Debug.Log("Player dentro de trampilla");
+        }
+    }
 
-        used = true;
-        StressManager.Instance.IncreaseStress();
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            playerInside = false;
+        }
+    }
 
-        Debug.Log("Stress increased");
+    void Update()
+    {
+        if (playerInside && Input.GetKeyDown(KeyCode.E))
+        {
+            Debug.Log("E presionada en trampilla");
+            StressManager.Instance.IncreaseStress();
+            Debug.Log("SpeedMultiplier = " + StressManager.Instance.speedMultiplier);
+        }
     }
 }
