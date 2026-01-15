@@ -10,17 +10,37 @@ public class ExitWallTrigger : MonoBehaviour
     [Header("Objects to hide")]
     public GameObject[] spikesToDisable;
 
+    [Header("Skybox")]
+    public Material newSkybox;
+
+    [Header("Flashlight")]
+    public Light flashlight;
+    public float flashlightFadeDuration = 0.5f;
+
+    [Header("Room Lights")]
+    public Light[] roomLights;   // las 2 luces
+    public float roomLightIntensity = 1f;
+
     Collider wallCollider;
+    bool used = false;
 
     void Awake()
     {
         wallCollider = GetComponent<Collider>();
+
+        // Asegurarse de que las luces estén apagadas al inicio
+        foreach (var l in roomLights)
+        {
+            if (l != null)
+                l.enabled = false;
+        }
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!used && other.CompareTag("Player"))
         {
+            used = true;
             StartCoroutine(Transition());
         }
     }
@@ -31,19 +51,54 @@ public class ExitWallTrigger : MonoBehaviour
         foreach (var s in spikesToDisable)
             s.SetActive(false);
 
-        yield return null; // un frame (muy importante)
+        // 2️⃣ apagar linterna suavemente
+        if (flashlight != null)
+            yield return StartCoroutine(FadeFlashlight());
 
-        // 2️⃣ mover player a la otra habitación
+        // 3️⃣ cambiar skybox
+        if (newSkybox != null)
+        {
+            RenderSettings.skybox = newSkybox;
+            DynamicGI.UpdateEnvironment();
+        }
+
+        yield return null;
+
+        // 4️⃣ mover player
         CharacterController cc = player.GetComponent<CharacterController>();
         cc.enabled = false;
         player.position = nextRoomSpawn.position;
         player.rotation = nextRoomSpawn.rotation;
         cc.enabled = true;
 
-        // 3️⃣ bloquear la pared para que no vuelva
+        // 5️⃣ prender luces de la habitación
+        foreach (var l in roomLights)
+        {
+            if (l != null)
+            {
+                l.enabled = true;
+                l.intensity = roomLightIntensity;
+            }
+        }
+
+        // 6️⃣ bloquear pared
         wallCollider.isTrigger = false;
 
-        // 4️⃣ apagar este script (ya no se usa más)
         enabled = false;
+    }
+
+    IEnumerator FadeFlashlight()
+    {
+        float startIntensity = flashlight.intensity;
+        float t = 0f;
+
+        while (t < flashlightFadeDuration)
+        {
+            t += Time.deltaTime;
+            flashlight.intensity = Mathf.Lerp(startIntensity, 0f, t / flashlightFadeDuration);
+            yield return null;
+        }
+
+        flashlight.intensity = 0f;
     }
 }
