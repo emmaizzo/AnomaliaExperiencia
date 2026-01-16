@@ -5,27 +5,35 @@ using UnityEngine;
 
 public class ProximityVideoPlayer : MonoBehaviour
 {
-    [Header("Video a controlar")]
+    [Header("Video")]
     public VideoPlayer videoPlayer;
 
     [Header("Audio Fade")]
-    public float fadeDuration = 1.0f;
-    public float targetVolume = 1.0f;
+    public float audioFadeDuration = 1f;
+    public float targetVolume = 1f;
 
-    Coroutine fadeCoroutine;
+    [Header("Light")]
+    public Light targetLight;
+    public float lightFadeDuration = 1f;
+    public float lightIntensityOn = 1.5f;
+
+    Coroutine audioCoroutine;
+    Coroutine lightCoroutine;
 
     void Start()
     {
         if (videoPlayer == null)
         {
-            Debug.LogError("No asignaste un VideoPlayer en el Inspector", this);
+            Debug.LogError("No asignaste un VideoPlayer", this);
             return;
         }
 
         videoPlayer.Play();
         videoPlayer.Pause();
-
         videoPlayer.SetDirectAudioVolume(0, 0f);
+
+        if (targetLight != null)
+            targetLight.intensity = 0f;
     }
 
     void OnTriggerEnter(Collider other)
@@ -33,34 +41,36 @@ public class ProximityVideoPlayer : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         videoPlayer.Play();
-        StartFade(targetVolume);
+        FadeAudio(targetVolume);
+        FadeLight(lightIntensityOn);
     }
 
     void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
-        StartFade(0f);
+        FadeAudio(0f);
+        FadeLight(0f);
     }
 
-    void StartFade(float toVolume)
+    void FadeAudio(float to)
     {
-        if (fadeCoroutine != null)
-            StopCoroutine(fadeCoroutine);
+        if (audioCoroutine != null)
+            StopCoroutine(audioCoroutine);
 
-        fadeCoroutine = StartCoroutine(FadeAudio(toVolume));
+        audioCoroutine = StartCoroutine(FadeAudioRoutine(to));
     }
 
-    IEnumerator FadeAudio(float to)
+    IEnumerator FadeAudioRoutine(float to)
     {
         float from = videoPlayer.GetDirectAudioVolume(0);
-        float time = 0f;
+        float t = 0f;
 
-        while (time < fadeDuration)
+        while (t < audioFadeDuration)
         {
-            float v = Mathf.Lerp(from, to, time / fadeDuration);
+            float v = Mathf.Lerp(from, to, t / audioFadeDuration);
             videoPlayer.SetDirectAudioVolume(0, v);
-            time += Time.deltaTime;
+            t += Time.deltaTime;
             yield return null;
         }
 
@@ -68,5 +78,30 @@ public class ProximityVideoPlayer : MonoBehaviour
 
         if (to == 0f)
             videoPlayer.Pause();
+    }
+
+    void FadeLight(float to)
+    {
+        if (targetLight == null) return;
+
+        if (lightCoroutine != null)
+            StopCoroutine(lightCoroutine);
+
+        lightCoroutine = StartCoroutine(FadeLightRoutine(to));
+    }
+
+    IEnumerator FadeLightRoutine(float to)
+    {
+        float from = targetLight.intensity;
+        float t = 0f;
+
+        while (t < lightFadeDuration)
+        {
+            targetLight.intensity = Mathf.Lerp(from, to, t / lightFadeDuration);
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        targetLight.intensity = to;
     }
 }
