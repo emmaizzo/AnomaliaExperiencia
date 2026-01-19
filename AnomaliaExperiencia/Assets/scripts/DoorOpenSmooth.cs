@@ -39,7 +39,7 @@ public class DoorOpenSmooth : MonoBehaviour
 
         if (introSound != null && bgSource != null)
         {
-            StartCoroutine(PlayIntroWithDelay(2f));
+            StartCoroutine(PlayIntroWithDelay(0.5f));
         }
         else
         {

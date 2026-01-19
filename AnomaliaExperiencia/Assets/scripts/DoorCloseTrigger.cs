@@ -1,6 +1,9 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using StarterAssets;
+using UnityEngine.InputSystem;
 using UnityEngine;
+
 
 public class DoorCloseTrigger : MonoBehaviour
 {
@@ -21,6 +24,15 @@ public class DoorCloseTrigger : MonoBehaviour
         if (other.CompareTag("Player") && !triggered)
         {
             triggered = true;
+
+            // 🔒 Bloqueo REAL del movimiento
+            FirstPersonController fpc = other.GetComponent<FirstPersonController>();
+            PlayerInput input = other.GetComponent<PlayerInput>();
+
+            if (fpc != null && input != null)
+            {
+                StartCoroutine(FreezePlayer(fpc, input));
+            }
 
             door.CloseAndLockDoor();
             StartCoroutine(AudioSequence());
@@ -45,5 +57,18 @@ public class DoorCloseTrigger : MonoBehaviour
         // Audio 3
         audioSource.clip = lastAudio;
         audioSource.Play();
+    }
+
+    IEnumerator FreezePlayer(FirstPersonController fpc, PlayerInput input)
+    {
+        // Cortamos input y movimiento
+        input.enabled = false;
+        fpc.enabled = false;
+
+        yield return null;        // frame actual
+        yield return null;        // frame siguiente (clave)
+
+        fpc.enabled = true;
+        input.enabled = true;
     }
 }
