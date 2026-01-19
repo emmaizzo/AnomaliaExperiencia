@@ -64,7 +64,7 @@ public class EyesRoomManager : MonoBehaviour
             GameObject eye = Instantiate(
                 eyePrefab,
                 worldPos,
-                eyePrefab.transform.rotation // 🔑 CLAVE
+                eyePrefab.transform.rotation
             );
 
             eye.transform.localScale *= scale;
