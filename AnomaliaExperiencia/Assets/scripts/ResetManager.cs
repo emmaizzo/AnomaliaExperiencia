@@ -41,6 +41,10 @@ public class ResetManager : MonoBehaviour
         // Reset stress
         StressManager.Instance.ResetStress();
 
+        TrapdoorTrigger trap = FindObjectOfType<TrapdoorTrigger>();
+        if (trap != null)
+            trap.ResetVolumeVisuals();
+
         // Reset all resettable objects
         ResettableObject[] resettable = FindObjectsOfType<ResettableObject>();
         foreach (var obj in resettable)

@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine;
 
 public class ExitWallTrigger : MonoBehaviour
@@ -18,8 +20,22 @@ public class ExitWallTrigger : MonoBehaviour
     public float flashlightFadeDuration = 0.5f;
 
     [Header("Room Lights")]
-    public Light[] roomLights;   // las 2 luces
+    public Light[] roomLights;
     public float roomLightIntensity = 1f;
+
+    [Header("Global Volume")]
+    public Volume globalVolume;
+    public float whiteRoomTransitionTime = 1f;
+
+    [Header("Music")]
+    public AudioSource firstMusic;
+    public AudioSource roomMusic;
+    public float musicFadeOutTime = 1f;
+    public float musicFadeInTime = 1f;
+
+    Vignette vignette;
+    ColorAdjustments color;
+    DepthOfField dof;
 
     Collider wallCollider;
     bool used = false;
@@ -28,11 +44,14 @@ public class ExitWallTrigger : MonoBehaviour
     {
         wallCollider = GetComponent<Collider>();
 
-        // Asegurarse de que las luces estén apagadas al inicio
         foreach (var l in roomLights)
+            if (l != null) l.enabled = false;
+
+        if (globalVolume != null && globalVolume.profile != null)
         {
-            if (l != null)
-                l.enabled = false;
+            globalVolume.profile.TryGet(out vignette);
+            globalVolume.profile.TryGet(out color);
+            globalVolume.profile.TryGet(out dof);
         }
     }
 
@@ -47,15 +66,15 @@ public class ExitWallTrigger : MonoBehaviour
 
     IEnumerator Transition()
     {
-        // 1️⃣ apagar pinchos
+        if (firstMusic != null)
+            StartCoroutine(FadeOutMusic(firstMusic));
+
         foreach (var s in spikesToDisable)
             s.SetActive(false);
 
-        // 2️⃣ apagar linterna suavemente
         if (flashlight != null)
             yield return StartCoroutine(FadeFlashlight());
 
-        // 3️⃣ cambiar skybox
         if (newSkybox != null)
         {
             RenderSettings.skybox = newSkybox;
@@ -64,14 +83,15 @@ public class ExitWallTrigger : MonoBehaviour
 
         yield return null;
 
-        // 4️⃣ mover player
         CharacterController cc = player.GetComponent<CharacterController>();
         cc.enabled = false;
         player.position = nextRoomSpawn.position;
         player.rotation = nextRoomSpawn.rotation;
         cc.enabled = true;
 
-        // 5️⃣ prender luces de la habitación
+        if (roomMusic != null)
+            StartCoroutine(FadeInMusic(roomMusic));
+
         foreach (var l in roomLights)
         {
             if (l != null)
@@ -81,10 +101,38 @@ public class ExitWallTrigger : MonoBehaviour
             }
         }
 
-        // 6️⃣ bloquear pared
+        StartCoroutine(WhiteRoomVolume());
+
         wallCollider.isTrigger = false;
 
         enabled = false;
+    }
+
+    IEnumerator WhiteRoomVolume()
+    {
+        float startWeight = globalVolume.weight;
+        float startVignette = vignette.intensity.value;
+        float startExposure = color.postExposure.value;
+        float startSaturation = color.saturation.value;
+        float startContrast = color.contrast.value;
+        float startBlur = dof.gaussianEnd.value;
+
+        float t = 0f;
+
+        while (t < whiteRoomTransitionTime)
+        {
+            t += Time.deltaTime;
+            float lerp = t / whiteRoomTransitionTime;
+
+            globalVolume.weight = Mathf.Lerp(startWeight, 1f, lerp);
+            vignette.intensity.value = Mathf.Lerp(startVignette, 0.05f, lerp);
+            color.postExposure.value = Mathf.Lerp(startExposure, 0.2f, lerp);
+            color.saturation.value = Mathf.Lerp(startSaturation, -40f, lerp);
+            color.contrast.value = Mathf.Lerp(startContrast, -10f, lerp);
+            dof.gaussianEnd.value = Mathf.Lerp(startBlur, 3f, lerp);
+
+            yield return null;
+        }
     }
 
     IEnumerator FadeFlashlight()
@@ -100,5 +148,38 @@ public class ExitWallTrigger : MonoBehaviour
         }
 
         flashlight.intensity = 0f;
+    }
+
+    IEnumerator FadeOutMusic(AudioSource music)
+    {
+        float startVolume = music.volume;
+        float t = 0f;
+
+        while (t < musicFadeOutTime)
+        {
+            t += Time.deltaTime;
+            music.volume = Mathf.Lerp(startVolume, 0f, t / musicFadeOutTime);
+            yield return null;
+        }
+
+        music.volume = 0f;
+        music.Stop();
+    }
+
+    IEnumerator FadeInMusic(AudioSource music)
+    {
+        music.volume = 0f;
+        music.Play();
+
+        float t = 0f;
+
+        while (t < musicFadeInTime)
+        {
+            t += Time.deltaTime;
+            music.volume = Mathf.Lerp(0f, 1f, t / musicFadeInTime);
+            yield return null;
+        }
+
+        music.volume = 1f;
     }
 }
