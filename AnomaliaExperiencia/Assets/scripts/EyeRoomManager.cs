@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class EyeRoomManager : MonoBehaviour
 {
@@ -33,16 +35,36 @@ public class EyeRoomManager : MonoBehaviour
     public float delayOjoAnomalo = 1f;
     public float radioExclusionAnomalo = 2.5f;
 
+    [Header("Ojo Base (solo referencia)")]
+    public GameObject ojoBase;
+
+    [Header("Global Volume")]
+    public Volume globalVolume;
+    public float flashDuration = 0.5f; // duración del flash rojo
+
     List<Vector3> posicionesUsadas = new List<Vector3>();
     bool ojoAnomaloSpawned = false;
+    ColorAdjustments colorAdjust;
+    Color originalColor;
 
     void Start()
     {
-        StartCoroutine(RutinaInicial());
+        // Ocultar mesh del ojo base
+        if (ojoBase != null)
+        {
+            Renderer[] renders = ojoBase.GetComponentsInChildren<Renderer>();
+            foreach (Renderer r in renders)
+                r.enabled = false;
+        }
 
-        // por si este objeto tenía un mesh
-        Renderer r = GetComponentInChildren<Renderer>();
-        if (r != null) r.enabled = false;
+        // Configurar Volume
+        if (globalVolume != null && globalVolume.profile.TryGet(out ColorAdjustments ca))
+        {
+            colorAdjust = ca;
+            originalColor = colorAdjust.colorFilter.value;
+        }
+
+        StartCoroutine(RutinaInicial());
     }
 
     IEnumerator RutinaInicial()
@@ -68,7 +90,13 @@ public class EyeRoomManager : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, distanciaInteraccion))
         {
             if (hit.collider.gameObject == objetoBoton)
+            {
                 SpawnOjos(ojosPorClick);
+
+                // Flash rojo del volume
+                if (colorAdjust != null)
+                    StartCoroutine(FlashRed());
+            }
         }
     }
 
@@ -88,11 +116,9 @@ public class EyeRoomManager : MonoBehaviour
             Vector3 dir = GetRandomUpperHemisphereDirection();
             Vector3 pos = centroHabitacion.position + dir * radioSemiesfera;
 
-            // ❌ muy cerca de otros ojos
             if (posicionesUsadas.Exists(p => Vector3.Distance(p, pos) < distanciaMinimaEntreOjos))
                 continue;
 
-            // ❌ muy cerca del ojo anómalo (zona fija)
             if (ojoAnomaloSpawned &&
                 Vector3.Distance(pos, spawnOjoAnomalo.position) < radioExclusionAnomalo)
                 continue;
@@ -104,7 +130,6 @@ public class EyeRoomManager : MonoBehaviour
             Quaternion rot = Quaternion.LookRotation(-normal) * Quaternion.Euler(0f, 180f, 0f);
 
             GameObject ojo = Instantiate(ojoNormalPrefab, pos, rot);
-
             float escala = Random.Range(rangoEscala.x, rangoEscala.y);
             ojo.transform.localScale = Vector3.one * escala;
 
@@ -132,7 +157,7 @@ public class EyeRoomManager : MonoBehaviour
 
         ojoAnomaloSpawned = true;
 
-        // 👉 ROTACIÓN FIJA
+        // Rotación fija
         Quaternion rot = Quaternion.Euler(-50.962f, 60.03f, 14.597f);
 
         GameObject ojo = Instantiate(
@@ -146,6 +171,32 @@ public class EyeRoomManager : MonoBehaviour
             look.SetTarget(jugador);
 
         Debug.Log("🧿 Ojo anómalo spawneado con rotación fija");
+    }
+
+    // =============================
+    // Animación flash rojo
+    // =============================
+    private IEnumerator FlashRed()
+    {
+        float t = 0;
+        Color targetColor = Color.red;
+
+        // Ir hacia rojo
+        while (t < 1)
+        {
+            t += Time.deltaTime / flashDuration;
+            colorAdjust.colorFilter.value = Color.Lerp(originalColor, targetColor, t);
+            yield return null;
+        }
+
+        // Volver a original
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime / flashDuration;
+            colorAdjust.colorFilter.value = Color.Lerp(targetColor, originalColor, t);
+            yield return null;
+        }
     }
 
     // =============================
