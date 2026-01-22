@@ -1,12 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class AnomalousEyeInteract : MonoBehaviour
 {
     public float distanciaInteraccion = 2f;
+
+    [Header("Fade")]
     public CanvasGroup fadeCanvas;
     public float fadeDuracion = 1f;
+
+    [Header("Escena")]
+    public string nombreEscena;
 
     bool usado = false;
 
@@ -20,23 +26,28 @@ public class AnomalousEyeInteract : MonoBehaviour
 
             if (Vector3.Distance(cam.position, transform.position) <= distanciaInteraccion)
             {
-                StartCoroutine(FadeOut());
                 usado = true;
+                StartCoroutine(FadeOutYEscena());
             }
         }
     }
 
-    IEnumerator FadeOut()
+    IEnumerator FadeOutYEscena()
     {
         float t = 0f;
+
+        fadeCanvas.blocksRaycasts = true;
 
         while (t < fadeDuracion)
         {
             t += Time.deltaTime;
-            fadeCanvas.alpha = Mathf.Lerp(0, 1, t / fadeDuracion);
+            fadeCanvas.alpha = Mathf.Lerp(0f, 1f, t / fadeDuracion);
             yield return null;
         }
 
-        // acá después cargás escena, movés pared, etc
+        fadeCanvas.alpha = 1f;
+
+        // cargar escena
+        SceneManager.LoadScene(nombreEscena);
     }
 }
