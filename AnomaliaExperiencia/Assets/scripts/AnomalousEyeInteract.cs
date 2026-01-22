@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,9 +6,13 @@ public class AnomalousEyeInteract : MonoBehaviour
 {
     public float distanciaInteraccion = 2f;
 
-    [Header("Fade")]
+    [Header("Fade Pantalla")]
     public CanvasGroup fadeCanvas;
     public float fadeDuracion = 1f;
+
+    [Header("Música")]
+    public AudioSource musicaAmbiente;
+    public float duracionFadeMusica = 1.5f;
 
     [Header("Escena")]
     public string nombreEscena;
@@ -27,27 +30,43 @@ public class AnomalousEyeInteract : MonoBehaviour
             if (Vector3.Distance(cam.position, transform.position) <= distanciaInteraccion)
             {
                 usado = true;
-                StartCoroutine(FadeOutYEscena());
+                StartCoroutine(FadeOutCompleto());
             }
         }
     }
 
-    IEnumerator FadeOutYEscena()
+    IEnumerator FadeOutCompleto()
     {
-        float t = 0f;
-
         fadeCanvas.blocksRaycasts = true;
+
+        float t = 0f;
+        float volumenInicial = musicaAmbiente != null ? musicaAmbiente.volume : 0f;
 
         while (t < fadeDuracion)
         {
             t += Time.deltaTime;
+
+            // Fade pantalla
             fadeCanvas.alpha = Mathf.Lerp(0f, 1f, t / fadeDuracion);
+
+            // Fade música
+            if (musicaAmbiente != null)
+            {
+                musicaAmbiente.volume = Mathf.Lerp(
+                    volumenInicial,
+                    0f,
+                    t / duracionFadeMusica
+                );
+            }
+
             yield return null;
         }
 
         fadeCanvas.alpha = 1f;
 
-        // cargar escena
+        if (musicaAmbiente != null)
+            musicaAmbiente.volume = 0f;
+
         SceneManager.LoadScene(nombreEscena);
     }
 }

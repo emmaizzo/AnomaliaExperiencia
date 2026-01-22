@@ -1,19 +1,18 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DelayedSpatialSound : MonoBehaviour
 {
     public AudioSource spatialAudio;
-    public float delay = 11f;
+    public float delay = 10f;
 
     void Start()
     {
-        if (spatialAudio != null)
-        {
-            spatialAudio.playOnAwake = false;
-            spatialAudio.Stop();
-        }
+        spatialAudio.playOnAwake = false;
+        spatialAudio.loop = true;
+        spatialAudio.volume = 0.5f; // volumen inicial
+        spatialAudio.pitch = 0.8f;  // latido lento inicial
 
         StartCoroutine(PlaySoundAfterDelay());
     }
@@ -22,10 +21,7 @@ public class DelayedSpatialSound : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        if (spatialAudio != null)
-        {
-            spatialAudio.Play();
-        }
+        spatialAudio.volume = 0.5f; // 🔥 fuerza volumen
+        spatialAudio.Play();
     }
 }
-
