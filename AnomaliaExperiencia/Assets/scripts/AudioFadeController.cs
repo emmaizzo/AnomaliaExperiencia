@@ -1,10 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AudioFadeController : MonoBehaviour
 {
     public float fadeDuration = 2f;
+
+    [Header("Audios a IGNORAR en el fade")]
+    public AudioSource[] ignoreSources;
 
     AudioSource[] allSources;
 
@@ -24,7 +26,10 @@ public class AudioFadeController : MonoBehaviour
 
         float[] startVolumes = new float[allSources.Length];
         for (int i = 0; i < allSources.Length; i++)
-            startVolumes[i] = allSources[i].volume;
+        {
+            if (allSources[i] != null)
+                startVolumes[i] = allSources[i].volume;
+        }
 
         while (t < fadeDuration)
         {
@@ -33,17 +38,37 @@ public class AudioFadeController : MonoBehaviour
 
             for (int i = 0; i < allSources.Length; i++)
             {
-                if (allSources[i] != null)
-                    allSources[i].volume = startVolumes[i] * k;
+                AudioSource src = allSources[i];
+                if (src == null) continue;
+                if (IsIgnored(src)) continue;
+
+                src.volume = startVolumes[i] * k;
             }
 
             yield return null;
         }
 
+        // Stop SOLO los que no fueron ignorados
         for (int i = 0; i < allSources.Length; i++)
         {
-            if (allSources[i] != null)
-                allSources[i].Stop();
+            AudioSource src = allSources[i];
+            if (src == null) continue;
+            if (IsIgnored(src)) continue;
+
+            src.Stop();
         }
+    }
+
+    bool IsIgnored(AudioSource source)
+    {
+        if (ignoreSources == null) return false;
+
+        foreach (var ignored in ignoreSources)
+        {
+            if (ignored == source)
+                return true;
+        }
+
+        return false;
     }
 }

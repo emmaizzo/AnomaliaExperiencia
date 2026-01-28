@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 
@@ -9,6 +8,13 @@ public class DoorTransition : MonoBehaviour
     public FadeController fadeController;
     public AudioFadeController audioFade;
     public AudioSource doorSound;
+
+    [Header("Audio durante black screen")]
+    public AudioSource blackScreenAudio;
+    public float blackScreenAudioDelay = 1f;
+
+    [Header("Black screen timing")]
+    public float blackScreenDuration = 8f;
 
     [Header("Escena")]
     public string nextSceneName;
@@ -21,21 +27,38 @@ public class DoorTransition : MonoBehaviour
         if (playerInside && !triggered && Input.GetKeyDown(KeyCode.E))
         {
             triggered = true;
-
-            if (doorSound != null)
-                doorSound.Play();
-
-            if (audioFade != null)
-                audioFade.FadeOutAll();
-
-            if (fadeController != null)
-            {
-                fadeController.FadeToBlack(() =>
-                {
-                    SceneManager.LoadScene(nextSceneName);
-                });
-            }
+            StartCoroutine(TransitionSequence());
         }
+    }
+
+    IEnumerator TransitionSequence()
+    {
+        // 🔊 Sonido de puerta
+        if (doorSound != null)
+            doorSound.Play();
+
+        // 🔉 Fade out de audios
+        if (audioFade != null)
+            audioFade.FadeOutAll();
+
+        // 🖤 Fade a negro
+        if (fadeController != null)
+            fadeController.FadeToBlack(null);
+
+        // 🎙️ Audio al segundo 1 del negro
+        if (blackScreenAudio != null)
+        {
+            yield return new WaitForSeconds(blackScreenAudioDelay);
+            blackScreenAudio.Play();
+        }
+
+        // ⏱️ Mantiene el negro
+        yield return new WaitForSeconds(
+            blackScreenDuration - blackScreenAudioDelay
+        );
+
+        // 🚪 Carga escena
+        SceneManager.LoadScene(nextSceneName);
     }
 
     void OnTriggerEnter(Collider other)

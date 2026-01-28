@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CorridorAudioByDistance : MonoBehaviour
@@ -12,6 +11,10 @@ public class CorridorAudioByDistance : MonoBehaviour
     public AudioSource musicB;
     public AudioSource breathing;
 
+    [Header("Audio extra por distancia")]
+    public AudioSource distanceEventAudio;
+    public float distanceEventTrigger = 150f;
+
     [Header("Distancias")]
     public float musicTransitionDistance = 100f;
     public float musicFadeRange = 20f;
@@ -23,20 +26,36 @@ public class CorridorAudioByDistance : MonoBehaviour
     public float minBreathingPitch = 0.95f;
     public float maxBreathingPitch = 1.25f;
 
+    [Header("Ducking por eventos")]
+    public float eventDuckMultiplier = 0.25f;
+    public float eventDuckFadeTime = 0.25f;
+    public float eventDuckDuration = 3f;
+
     float totalDistance;
     Vector3 lastPlayerPos;
 
     bool musicBStarted = false;
     bool breathingStarted = false;
     float breathingTimer = 0f;
+    bool distanceEventPlayed = false;
+
+    float baseMusicAVol;
+    float baseMusicBVol;
+    float baseBreathingVol;
+
+    Coroutine duckRoutine;
 
     void Start()
     {
         lastPlayerPos = player.position;
 
-        musicA.volume = 1f;
-        musicB.volume = 0f;
-        breathing.volume = 0f;
+        baseMusicAVol = 1f;
+        baseMusicBVol = 0f;
+        baseBreathingVol = 0f;
+
+        musicA.volume = baseMusicAVol;
+        musicB.volume = baseMusicBVol;
+        breathing.volume = baseBreathingVol;
 
         musicA.Play();
         musicB.Play();
@@ -51,14 +70,25 @@ public class CorridorAudioByDistance : MonoBehaviour
         totalDistance += delta;
         lastPlayerPos = player.position;
 
+        // 🎯 EVENTO A LOS 150
+        if (!distanceEventPlayed && totalDistance >= distanceEventTrigger)
+        {
+            distanceEventPlayed = true;
+
+            if (distanceEventAudio != null)
+            {
+                distanceEventAudio.Play();
+                DuckForEvent();
+            }
+        }
+
         float fadeStart = musicTransitionDistance - musicFadeRange;
         float fadeEnd = musicTransitionDistance + musicFadeRange;
 
-        float musicT = Mathf.InverseLerp(fadeStart, fadeEnd, totalDistance);
-        musicT = Mathf.Clamp01(musicT);
+        float musicT = Mathf.Clamp01(Mathf.InverseLerp(fadeStart, fadeEnd, totalDistance));
 
-        musicA.volume = 1f - musicT;
-        musicB.volume = musicT;
+        baseMusicAVol = 1f - musicT;
+        baseMusicBVol = musicT;
 
         if (!musicBStarted && musicT > 0.01f)
         {
@@ -69,7 +99,6 @@ public class CorridorAudioByDistance : MonoBehaviour
         if (musicBStarted && !breathingStarted)
         {
             breathingTimer += Time.deltaTime;
-
             if (breathingTimer >= breathingDelayAfterMusicBStart)
             {
                 breathingStarted = true;
@@ -85,8 +114,73 @@ public class CorridorAudioByDistance : MonoBehaviour
                 totalDistance
             );
 
-            breathing.volume = Mathf.Lerp(0f, maxBreathingVolume, breathT);
+            baseBreathingVol = Mathf.Lerp(0f, maxBreathingVolume, breathT);
             breathing.pitch = Mathf.Lerp(minBreathingPitch, maxBreathingPitch, breathT);
         }
+
+        // Aplica volúmenes base si no hay duck activo
+        if (duckRoutine == null)
+        {
+            musicA.volume = baseMusicAVol;
+            musicB.volume = baseMusicBVol;
+            breathing.volume = baseBreathingVol;
+        }
+    }
+
+    // =========================
+    // DUCKING POR EVENTO
+    // =========================
+
+    void DuckForEvent()
+    {
+        if (duckRoutine != null)
+            StopCoroutine(duckRoutine);
+
+        duckRoutine = StartCoroutine(EventDuckRoutine());
+    }
+
+    IEnumerator EventDuckRoutine()
+    {
+        float t = 0f;
+
+        float startA = musicA.volume;
+        float startB = musicB.volume;
+        float startBreath = breathing.volume;
+
+        // Fade down
+        while (t < eventDuckFadeTime)
+        {
+            t += Time.deltaTime;
+            float lerp = t / eventDuckFadeTime;
+
+            musicA.volume = Mathf.Lerp(startA, baseMusicAVol * eventDuckMultiplier, lerp);
+            musicB.volume = Mathf.Lerp(startB, baseMusicBVol * eventDuckMultiplier, lerp);
+            breathing.volume = Mathf.Lerp(startBreath, baseBreathingVol * eventDuckMultiplier, lerp);
+
+            yield return null;
+        }
+
+        // Mantiene duck
+        yield return new WaitForSeconds(eventDuckDuration);
+
+        // Fade up
+        t = 0f;
+        startA = musicA.volume;
+        startB = musicB.volume;
+        startBreath = breathing.volume;
+
+        while (t < eventDuckFadeTime)
+        {
+            t += Time.deltaTime;
+            float lerp = t / eventDuckFadeTime;
+
+            musicA.volume = Mathf.Lerp(startA, baseMusicAVol, lerp);
+            musicB.volume = Mathf.Lerp(startB, baseMusicBVol, lerp);
+            breathing.volume = Mathf.Lerp(startBreath, baseBreathingVol, lerp);
+
+            yield return null;
+        }
+
+        duckRoutine = null;
     }
 }
