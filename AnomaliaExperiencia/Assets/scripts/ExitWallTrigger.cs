@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine;
@@ -33,6 +32,13 @@ public class ExitWallTrigger : MonoBehaviour
     public float musicFadeOutTime = 1f;
     public float musicFadeInTime = 1f;
 
+    [Header("Extra Audio")]
+    public AudioSource extraAudioToStop;
+
+    [Header("Enter Audio")]
+    public AudioSource enterAudio;
+    public float enterAudioDelay = 1f;
+
     Vignette vignette;
     ColorAdjustments color;
     DepthOfField dof;
@@ -60,8 +66,19 @@ public class ExitWallTrigger : MonoBehaviour
         if (!used && other.CompareTag("Player"))
         {
             used = true;
+
+            // 🔊 audio con delay
+            if (enterAudio != null)
+                StartCoroutine(PlayEnterAudio());
+
             StartCoroutine(Transition());
         }
+    }
+
+    IEnumerator PlayEnterAudio()
+    {
+        yield return new WaitForSeconds(enterAudioDelay);
+        enterAudio.Play();
     }
 
     IEnumerator Transition()
@@ -69,8 +86,11 @@ public class ExitWallTrigger : MonoBehaviour
         if (firstMusic != null)
             StartCoroutine(FadeOutMusic(firstMusic));
 
+        if (extraAudioToStop != null)
+            StartCoroutine(FadeOutMusic(extraAudioToStop));
+
         foreach (var s in spikesToDisable)
-            s.SetActive(false);
+            if (s != null) s.SetActive(false);
 
         if (flashlight != null)
             yield return StartCoroutine(FadeFlashlight());
@@ -104,7 +124,6 @@ public class ExitWallTrigger : MonoBehaviour
         StartCoroutine(WhiteRoomVolume());
 
         wallCollider.isTrigger = false;
-
         enabled = false;
     }
 

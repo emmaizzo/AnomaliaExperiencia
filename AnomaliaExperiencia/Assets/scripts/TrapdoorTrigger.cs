@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -23,6 +23,13 @@ public class TrapdoorTrigger : MonoBehaviour
     [Header("Volume Transition")]
     public float volumeTransitionTime = 0.6f;
     Coroutine volumeRoutine;
+
+    [Header("Special Audio")]
+    public AudioSource eightTimesAudio;   // 🔊 nuevo audio
+    public int triggerCountNeeded = 8;
+
+    int triggerCount = 0;
+    bool specialAudioPlayed = false;
 
     void Awake()
     {
@@ -54,6 +61,7 @@ public class TrapdoorTrigger : MonoBehaviour
     {
         if (playerInside && Input.GetKeyDown(KeyCode.E))
         {
+            // stress
             StressManager.Instance.IncreaseStress();
 
             currentStress++;
@@ -61,8 +69,21 @@ public class TrapdoorTrigger : MonoBehaviour
 
             UpdateVolume();
 
+            // audio normal
             if (audioSource != null)
                 audioSource.Play();
+
+            // contador de interacciones
+            triggerCount++;
+
+            // 🔥 audio especial a los 8 toques
+            if (!specialAudioPlayed && triggerCount >= triggerCountNeeded)
+            {
+                if (eightTimesAudio != null)
+                    eightTimesAudio.Play();
+
+                specialAudioPlayed = true;
+            }
         }
     }
 
@@ -117,6 +138,8 @@ public class TrapdoorTrigger : MonoBehaviour
     public void ResetVolumeVisuals()
     {
         currentStress = 0f;
+        triggerCount = 0;
+        specialAudioPlayed = false;
 
         if (volumeRoutine != null)
             StopCoroutine(volumeRoutine);

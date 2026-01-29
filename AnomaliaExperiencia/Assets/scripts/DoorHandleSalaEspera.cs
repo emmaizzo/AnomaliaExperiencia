@@ -2,20 +2,27 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class DoorHandleInteract : MonoBehaviour
+public class DoorHandleSalaEspera : MonoBehaviour
 {
+    [Header("Scene")]
     public string nextSceneName;
 
-    [Header("Black Fade")]
+    [Header("Fade")]
     public CanvasGroup blackPanel;
     public float fadeDuration = 2f;
+
+    [Header("Audio")]
+    public AudioSource handleAudio;
+
+    [Header("Interaction")]
+    public KeyCode interactionKey = KeyCode.E;
 
     bool playerInside = false;
     bool used = false;
 
     void Update()
     {
-        if (playerInside && !used && Input.GetKeyDown(KeyCode.E))
+        if (playerInside && !used && Input.GetKeyDown(interactionKey))
         {
             used = true;
             StartCoroutine(Sequence());
@@ -24,11 +31,21 @@ public class DoorHandleInteract : MonoBehaviour
 
     IEnumerator Sequence()
     {
-        yield return StartCoroutine(FadeBlackIn());
+        // 🔊 sonido manija
+        if (handleAudio != null)
+            handleAudio.Play();
+
+        // 🖤 fade out negro
+        yield return StartCoroutine(FadeToBlack());
+
+        // ⏱ mantener negro
+        yield return new WaitForSeconds(fadeDuration);
+
+        // 🚪 cambiar escena
         SceneManager.LoadScene(nextSceneName);
     }
 
-    IEnumerator FadeBlackIn()
+    IEnumerator FadeToBlack()
     {
         float t = 0f;
         blackPanel.alpha = 0f;

@@ -14,6 +14,9 @@ public class ResetManager : MonoBehaviour
     public Transform player;
     public Transform playerSpawn;
 
+    [Header("Audio")]
+    public AudioSource resetAudio;   // 🔊 nuevo audio
+
     CharacterController cc;
     MonoBehaviour[] playerScripts;
 
@@ -35,6 +38,10 @@ public class ResetManager : MonoBehaviour
 
     IEnumerator ResetRoutine()
     {
+        // 🔊 reproducir audio al iniciar reset
+        if (resetAudio != null)
+            resetAudio.Play();
+
         // Fade to black
         yield return StartCoroutine(Fade(1f));
 
@@ -50,11 +57,10 @@ public class ResetManager : MonoBehaviour
         foreach (var obj in resettable)
             obj.ResetState();
 
-        yield return null; // dejar que Unity procese el reset
+        yield return null;
 
         // -------- RESET PLAYER (FORMA SEGURA) --------
 
-        // Apagar scripts del player (movimiento, cámara, etc)
         foreach (var s in playerScripts)
         {
             if (!(s is CharacterController))
@@ -63,23 +69,17 @@ public class ResetManager : MonoBehaviour
 
         yield return null;
 
-        // Apagar CC
         cc.enabled = false;
 
-        // Resetear posición
         player.position = playerSpawn.position;
         player.rotation = playerSpawn.rotation;
 
         yield return null;
 
-        // Volver a prender CC
         cc.enabled = true;
 
-        // Volver a prender scripts
         foreach (var s in playerScripts)
-        {
             s.enabled = true;
-        }
 
         // --------------------------------------------
 
