@@ -15224,7 +15224,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   introCam: {fileID: 1888635586}
-  speed: 2.5
+  speed: 1.5
   duration: 52
 --- !u!4 &706732850
 Transform:

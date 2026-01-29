@@ -1,94 +1,114 @@
 ﻿using System.Collections;
 using UnityEngine;
 using StarterAssets;
-using Cinemachine;
 using UnityEngine.InputSystem;
+using Cinemachine;
 
 public class IntroCameraMove : MonoBehaviour
 {
+    [Header("Camera")]
+    public Transform camRig;                  // rig de la intro (ya posicionado en escena)
+    public Transform camEnd;                  // punto frente al player
+    public float moveSpeed = 0.6f;
+
     public CinemachineVirtualCamera introCam;
+    public CinemachineVirtualCamera playerCam;
 
-    [Header("Movimiento")]
-    public float speed = 1.5f;
-    public float duration = 6f;
-
-    float timer = 0f;
-    bool introFinished = false;
-
-    float startX;
-    float startY;
+    [Header("Player")]
+    public GameObject playerRoot;
 
     FirstPersonController playerController;
     PlayerInput playerInput;
+    CharacterController characterController;
+    AudioSource[] playerAudios;
+
+    [Header("Fade")]
+    public CanvasGroup fadeCanvas;
+    public float fadeDuration = 2f;
+
+    [Header("Audio")]
+    public AudioSource introAudio;
+
+    bool finished = false;
+
+    void Awake()
+    {
+        // negro inicial
+        fadeCanvas.alpha = 1;
+
+        // referencias player
+        playerController = playerRoot.GetComponent<FirstPersonController>();
+        playerInput = playerRoot.GetComponent<PlayerInput>();
+        characterController = playerRoot.GetComponent<CharacterController>();
+
+        // 🔒 bloqueo total
+        playerController.enabled = false;
+        playerInput.enabled = false;
+        characterController.enabled = false;
+
+        // 🔇 muteamos TODOS los audios del player (pasos incluidos)
+        playerAudios = playerRoot.GetComponentsInChildren<AudioSource>();
+        foreach (AudioSource a in playerAudios)
+        {
+            a.mute = true;
+        }
+
+        // prioridad de cámaras
+        introCam.Priority = 20;
+        playerCam.Priority = 0;
+    }
 
     void Start()
     {
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-
-        if (player == null)
-        {
-            Debug.LogError("No se encontró el Player con tag 'Player'");
-            return;
-        }
-
-        playerController = player.GetComponent<FirstPersonController>();
-        playerInput = player.GetComponent<PlayerInput>();
-
-        if (playerController == null || playerInput == null)
-        {
-            Debug.LogError("Faltan componentes en el Player");
-            return;
-        }
-
-        // Bloqueamos control del player
-        playerController.enabled = false;
-        playerInput.enabled = false;
-
-        if (introCam != null)
-        {
-            introCam.Priority = 20;
-
-            // 🔒 guardamos ejes iniciales
-            startX = introCam.transform.position.x;
-            startY = introCam.transform.position.y;
-        }
+        // todo arranca junto
+        introAudio.Play();
+        StartCoroutine(Fade(1, 0));
     }
 
     void Update()
     {
-        if (introFinished || introCam == null) return;
+        if (finished) return;
 
-        if (timer < duration)
+        camRig.position = Vector3.MoveTowards(
+            camRig.position,
+            camEnd.position,
+            moveSpeed * Time.deltaTime
+        );
+
+        if (Vector3.Distance(camRig.position, camEnd.position) < 0.01f)
         {
-            timer += Time.deltaTime;
-
-            Vector3 forward = introCam.transform.forward;
-            forward.y = 0f;
-            forward.Normalize();
-
-            Vector3 pos = introCam.transform.position;
-            pos += forward * speed * Time.deltaTime;
-
-            // 🔒 bloqueamos X e Y
-            introCam.transform.position = new Vector3(
-                startX,
-                startY,
-                pos.z
-            );
-        }
-        else
-        {
+            finished = true;
             EndIntro();
         }
     }
 
     void EndIntro()
     {
-        introFinished = true;
-
+        // 🎥 cambio de cámara
         introCam.Priority = 0;
+        playerCam.Priority = 20;
 
+        // 🔊 devolvemos audios del player
+        foreach (AudioSource a in playerAudios)
+        {
+            a.mute = false;
+        }
+
+        // 🎮 devolvemos control
         playerController.enabled = true;
         playerInput.enabled = true;
+        characterController.enabled = true;
+    }
+
+    IEnumerator Fade(float from, float to)
+    {
+        float t = 0f;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadeCanvas.alpha = Mathf.Lerp(from, to, t / fadeDuration);
+            yield return null;
+        }
+        fadeCanvas.alpha = to;
     }
 }

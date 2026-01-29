@@ -60,6 +60,19 @@ public class EyeRoomManager : MonoBehaviour
     public CanvasGroup panelNegro;
     public float fadePanelDuration = 1.5f;
 
+    // =============================
+    // 🔊 AUDIOS AGREGADOS
+    // =============================
+    [Header("Audios Nuevos")]
+    public AudioSource audioInicio;
+    public float delayAudioInicio = 1f;
+
+    public AudioSource audioCuartoClick;
+
+    int contadorClicks = 0;
+    bool audioCuartoClickReproducido = false;
+    // =============================
+
     List<Vector3> posicionesUsadas = new List<Vector3>();
 
     bool ojoAnomaloSpawned = false;
@@ -91,6 +104,9 @@ public class EyeRoomManager : MonoBehaviour
 
         StartCoroutine(RutinaInicial());
         StartCoroutine(RutinaPanelYAudio());
+
+        // ▶️ AUDIO DE INICIO (AGREGADO)
+        StartCoroutine(AudioInicio());
     }
 
     void Update()
@@ -134,6 +150,17 @@ public class EyeRoomManager : MonoBehaviour
     }
 
     // =============================
+    // 🔊 AUDIO DE INICIO (AGREGADO)
+    // =============================
+    IEnumerator AudioInicio()
+    {
+        yield return new WaitForSeconds(delayAudioInicio);
+
+        if (audioInicio != null)
+            audioInicio.Play();
+    }
+
+    // =============================
     // BOTÓN
     // =============================
     void CheckBoton()
@@ -157,6 +184,17 @@ public class EyeRoomManager : MonoBehaviour
 
                 if (botonTransform != null)
                     StartCoroutine(MoverBoton());
+
+                // 🔢 CONTADOR + AUDIO AL 5º CLICK (AGREGADO)
+                contadorClicks++;
+
+                if (contadorClicks >= 5 && !audioCuartoClickReproducido)
+                {
+                    audioCuartoClickReproducido = true;
+
+                    if (audioCuartoClick != null)
+                        audioCuartoClick.Play();
+                }
             }
         }
     }
@@ -243,11 +281,9 @@ public class EyeRoomManager : MonoBehaviour
             Vector3 dir = GetRandomUpperHemisphereDirection();
             Vector3 pos = centroHabitacion.position + dir * radioSemiesfera;
 
-            // ❌ distancia mínima entre ojos normales
             if (posicionesUsadas.Exists(p => Vector3.Distance(p, pos) < distanciaMinimaEntreOjos))
                 continue;
 
-            // 🚫 ZONA PROHIBIDA ABSOLUTA DEL OJO ANÓMALO
             if (Vector3.Distance(pos, centroExclusion) < radioExclusionAnomalo)
                 continue;
 
@@ -274,11 +310,7 @@ public class EyeRoomManager : MonoBehaviour
 
         Quaternion rotacionFija = Quaternion.Euler(-39.111f, 43.769f, 38.189f);
 
-        Instantiate(
-            ojoAnomaloPrefab,
-            spawnOjoAnomalo.position,
-            rotacionFija
-        );
+        Instantiate(ojoAnomaloPrefab, spawnOjoAnomalo.position, rotacionFija);
     }
 
     IEnumerator FlashRed()
