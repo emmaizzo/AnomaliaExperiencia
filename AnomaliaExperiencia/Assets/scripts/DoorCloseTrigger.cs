@@ -4,7 +4,6 @@ using StarterAssets;
 using UnityEngine.InputSystem;
 using UnityEngine;
 
-
 public class DoorCloseTrigger : MonoBehaviour
 {
     public DoorOpenSmooth door;
@@ -17,6 +16,9 @@ public class DoorCloseTrigger : MonoBehaviour
 
     public float delayBeforeFirst = 15f;
 
+    // 👉 NUEVO
+    public static bool lastAudioFinished = false;
+
     bool triggered = false;
 
     private void OnTriggerEnter(Collider other)
@@ -24,6 +26,8 @@ public class DoorCloseTrigger : MonoBehaviour
         if (other.CompareTag("Player") && !triggered)
         {
             triggered = true;
+
+            lastAudioFinished = false;
 
             // 🔒 Bloqueo REAL del movimiento
             FirstPersonController fpc = other.GetComponent<FirstPersonController>();
@@ -41,7 +45,6 @@ public class DoorCloseTrigger : MonoBehaviour
 
     IEnumerator AudioSequence()
     {
-        // Espera inicial
         yield return new WaitForSeconds(delayBeforeFirst);
 
         // Audio 1
@@ -57,16 +60,21 @@ public class DoorCloseTrigger : MonoBehaviour
         // Audio 3
         audioSource.clip = lastAudio;
         audioSource.Play();
+
+        // 👉 esperamos a que termine
+        yield return new WaitForSeconds(lastAudio.length);
+
+        // 👉 avisamos que ya terminó
+        lastAudioFinished = true;
     }
 
     IEnumerator FreezePlayer(FirstPersonController fpc, PlayerInput input)
     {
-        // Cortamos input y movimiento
         input.enabled = false;
         fpc.enabled = false;
 
-        yield return null;        // frame actual
-        yield return null;        // frame siguiente (clave)
+        yield return null;
+        yield return null;
 
         fpc.enabled = true;
         input.enabled = true;

@@ -7,7 +7,7 @@ public class CorridorAudioByDistance : MonoBehaviour
     public Transform player;
 
     [Header("Audio Sources")]
-    public AudioSource musicA;
+    public AudioSource musicA;   // chill
     public AudioSource musicB;
     public AudioSource breathing;
 
@@ -31,6 +31,15 @@ public class CorridorAudioByDistance : MonoBehaviour
     public float eventDuckFadeTime = 0.25f;
     public float eventDuckDuration = 3f;
 
+    // -------------------------
+    // Delay música chill
+    // -------------------------
+    [Header("Delay música chill")]
+    public float chillStartDelay = 11f;
+
+    float chillTimer = 0f;
+    bool chillStarted = false;
+
     float totalDistance;
     Vector3 lastPlayerPos;
 
@@ -53,11 +62,11 @@ public class CorridorAudioByDistance : MonoBehaviour
         baseMusicBVol = 0f;
         baseBreathingVol = 0f;
 
-        musicA.volume = baseMusicAVol;
+        musicA.volume = 0f;     // no suena hasta el delay
         musicB.volume = baseMusicBVol;
         breathing.volume = baseBreathingVol;
 
-        musicA.Play();
+        // musicA NO se reproduce todavía
         musicB.Play();
 
         breathing.Play();
@@ -66,6 +75,20 @@ public class CorridorAudioByDistance : MonoBehaviour
 
     void Update()
     {
+        // --------------------
+        // Delay música chill
+        // --------------------
+        if (!chillStarted)
+        {
+            chillTimer += Time.deltaTime;
+
+            if (chillTimer >= chillStartDelay)
+            {
+                chillStarted = true;
+                musicA.Play();
+            }
+        }
+
         float delta = Vector3.Distance(player.position, lastPlayerPos);
         totalDistance += delta;
         lastPlayerPos = player.position;
@@ -118,10 +141,16 @@ public class CorridorAudioByDistance : MonoBehaviour
             breathing.pitch = Mathf.Lerp(minBreathingPitch, maxBreathingPitch, breathT);
         }
 
-        // Aplica volúmenes base si no hay duck activo
+        // --------------------
+        // Aplica volúmenes base
+        // --------------------
         if (duckRoutine == null)
         {
-            musicA.volume = baseMusicAVol;
+            if (chillStarted)
+                musicA.volume = baseMusicAVol;
+            else
+                musicA.volume = 0f;
+
             musicB.volume = baseMusicBVol;
             breathing.volume = baseBreathingVol;
         }

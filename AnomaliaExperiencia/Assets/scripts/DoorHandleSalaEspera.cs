@@ -14,6 +14,9 @@ public class DoorHandleSalaEspera : MonoBehaviour
     [Header("Audio")]
     public AudioSource handleAudio;
 
+    // 👉 nuevo sonido cuando está bloqueado
+    public AudioSource blockedAudio;
+
     [Header("Interaction")]
     public KeyCode interactionKey = KeyCode.E;
 
@@ -22,8 +25,21 @@ public class DoorHandleSalaEspera : MonoBehaviour
 
     void Update()
     {
-        if (playerInside && !used && Input.GetKeyDown(interactionKey))
+        if (!playerInside || used)
+            return;
+
+        if (Input.GetKeyDown(interactionKey))
         {
+            // 🔒 sigue bloqueado
+            if (!DoorCloseTrigger.lastAudioFinished)
+            {
+                if (blockedAudio != null && !blockedAudio.isPlaying)
+                    blockedAudio.Play();
+
+                return;
+            }
+
+            // ✅ ya se puede usar
             used = true;
             StartCoroutine(Sequence());
         }
@@ -31,17 +47,13 @@ public class DoorHandleSalaEspera : MonoBehaviour
 
     IEnumerator Sequence()
     {
-        // 🔊 sonido manija
         if (handleAudio != null)
             handleAudio.Play();
 
-        // 🖤 fade out negro
         yield return StartCoroutine(FadeToBlack());
 
-        // ⏱ mantener negro
         yield return new WaitForSeconds(fadeDuration);
 
-        // 🚪 cambiar escena
         SceneManager.LoadScene(nextSceneName);
     }
 

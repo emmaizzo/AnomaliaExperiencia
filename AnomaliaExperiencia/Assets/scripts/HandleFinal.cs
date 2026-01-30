@@ -10,13 +10,27 @@ public class HandleFinal : MonoBehaviour
     bool used = false;
 
     [Header("Audio")]
-    public AudioSource handleAudio;   // 🔊 sonido inmediato manija
-    public AudioSource audioToPlay;   // 🔊 audio con delay
+    public AudioSource handleAudio;   // sonido inmediato
+    public AudioSource audioToPlay;   // audio con delay
     public float audioDelay = 2f;
 
-    [Header("Image Fade")]
-    public CanvasGroup imageCanvas;
-    public float fadeDuration = 1.5f;
+    [Header("White Image")]
+    public CanvasGroup whiteImageCanvas;
+    public float whiteFadeDuration = 0.5f;
+
+    [Header("Top Image")]
+    public CanvasGroup topImageCanvas;
+    public float topImageDelay = 1f;
+    public float topFadeDuration = 0.5f;
+
+    void Start()
+    {
+        if (whiteImageCanvas != null)
+            whiteImageCanvas.alpha = 0f;
+
+        if (topImageCanvas != null)
+            topImageCanvas.alpha = 0f;
+    }
 
     void Update()
     {
@@ -24,7 +38,6 @@ public class HandleFinal : MonoBehaviour
         {
             used = true;
 
-            // 🔊 sonido inmediato de manija
             if (handleAudio != null)
                 handleAudio.Play();
 
@@ -34,45 +47,50 @@ public class HandleFinal : MonoBehaviour
 
     IEnumerator PlaySequence()
     {
-        // ⏱ delay
+        // aparece la imagen blanca primero
+        if (whiteImageCanvas != null)
+            yield return StartCoroutine(FadeCanvas(whiteImageCanvas, 0f, 1f, whiteFadeDuration));
+
+        // espera 1 segundo
+        yield return new WaitForSeconds(topImageDelay);
+
+        // aparece la imagen de arriba
+        if (topImageCanvas != null)
+            yield return StartCoroutine(FadeCanvas(topImageCanvas, 0f, 1f, topFadeDuration));
+
+        // delay del audio principal
         yield return new WaitForSeconds(audioDelay);
 
-        // 🔊 audio principal
         if (audioToPlay != null)
             audioToPlay.Play();
-
-        // 🖼️ fade in imagen
-        yield return StartCoroutine(FadeImage(0, 1));
     }
 
-    IEnumerator FadeImage(float from, float to)
+    IEnumerator FadeCanvas(CanvasGroup cg, float from, float to, float duration)
     {
-        float t = 0f;
-        imageCanvas.alpha = from;
+        if (cg == null) yield break;
 
-        while (t < fadeDuration)
+        float t = 0f;
+        cg.alpha = from;
+
+        while (t < duration)
         {
             t += Time.deltaTime;
-            imageCanvas.alpha = Mathf.Lerp(from, to, t / fadeDuration);
+            cg.alpha = Mathf.Lerp(from, to, t / duration);
             yield return null;
         }
 
-        imageCanvas.alpha = to;
+        cg.alpha = to;
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
-        {
             playerInside = true;
-        }
     }
 
     void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Player"))
-        {
             playerInside = false;
-        }
     }
 }

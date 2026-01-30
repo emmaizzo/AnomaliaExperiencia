@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.036900718, g: 0.022088014, b: 0.034415055, a: 1}
+  m_IndirectSpecularColor: {r: 0.47655526, g: 0.28527555, b: 0.4444675, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -577,6 +577,7 @@ MonoBehaviour:
   eventDuckMultiplier: 0.25
   eventDuckFadeTime: 0.25
   eventDuckDuration: 3
+  chillStartDelay: 0
 --- !u!4 &452985112
 Transform:
   m_ObjectHideFlags: 0

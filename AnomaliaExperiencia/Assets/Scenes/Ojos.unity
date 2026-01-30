@@ -3458,7 +3458,7 @@ MonoBehaviour:
   musicaAmbiente: {fileID: 603178226}
   duracionFadeMusica: 1
   audioBlackScreen: {fileID: 1698771238}
-  delayAudioBlackScreen: 2
+  delayAudioBlackScreen: 1
   duracionBlackScreen: 8
   nombreEscena: Vacio
 --- !u!135 &1926926682
