@@ -14,6 +14,10 @@ public class AnomalousSkyboxController : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip snapSound;
 
+    [Header("Near sound")]
+    public AudioClip nearSound;
+    public float nearSoundDistance = 3f;
+
     [Header("Timing")]
     public float startAfterSeconds = 20f;
     public float minSpeed = 6f;
@@ -22,32 +26,51 @@ public class AnomalousSkyboxController : MonoBehaviour
     [Header("Distance")]
     public float maxDistance = 60f;
     public float minDistance = 1.5f;
-    public float exitDistance = 65f;
 
     [Header("Rotation")]
     public float minRotationSpeed = 0f;
     public float maxRotationSpeed = 80f;
 
+    AudioSource footstepAudio;   // 👈 encontrado automáticamente
+
     int currentIndex = 0;
     float timer = 0f;
-    bool inAnomaly = false;
+    bool nearSoundPlayed = false;
+    bool footstepsEnabled = false;
+
+    void Start()
+    {
+        // 🔎 buscamos el AudioSource de pasos en el player o hijos
+        footstepAudio = player.GetComponentInChildren<AudioSource>();
+
+        // 🔇 apagamos pasos al inicio (skybox negro)
+        if (footstepAudio != null)
+            footstepAudio.mute = true;
+    }
 
     void Update()
     {
         if (Time.time < startAfterSeconds)
             return;
 
-        float distance = Vector3.Distance(player.position, soundSource.position);
-
-        // 🔲 salir de la anomalía
-        if (distance > exitDistance && inAnomaly)
+        // 🔊 activamos pasos UNA SOLA VEZ
+        if (!footstepsEnabled)
         {
-            ResetToWhite();
-            return;
+            footstepsEnabled = true;
+
+            if (footstepAudio != null)
+                footstepAudio.mute = false;
         }
 
-        if (distance <= exitDistance)
-            inAnomaly = true;
+        float distance = Vector3.Distance(player.position, soundSource.position);
+
+        if (!nearSoundPlayed && distance <= nearSoundDistance)
+        {
+            nearSoundPlayed = true;
+
+            if (audioSource != null && nearSound != null)
+                audioSource.PlayOneShot(nearSound);
+        }
 
         float t = Mathf.InverseLerp(maxDistance, minDistance, distance);
         t = Mathf.Pow(t, 3f);
@@ -74,20 +97,7 @@ public class AnomalousSkyboxController : MonoBehaviour
         RenderSettings.skybox = anomalousSkyboxes[currentIndex];
         DynamicGI.UpdateEnvironment();
 
-        if (audioSource && snapSound)
-            audioSource.PlayOneShot(snapSound);
-    }
-
-    void ResetToWhite()
-    {
-        inAnomaly = false;
-        timer = 0f;
-
-        RenderSettings.skybox = whiteSkybox;
-        RenderSettings.skybox.SetFloat("_Rotation", 0f);
-        DynamicGI.UpdateEnvironment();
-
-        if (audioSource && snapSound)
+        if (audioSource != null && snapSound != null)
             audioSource.PlayOneShot(snapSound);
     }
 }
