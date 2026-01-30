@@ -1065,11 +1065,13 @@ MonoBehaviour:
   mainCamera: {fileID: 1980311418}
   floorRenderer: {fileID: 1221984518}
   audioSource: {fileID: 1031178924}
+  afterBlackSource: {fileID: 1930191797}
   skyboxBlack: {fileID: 2100000, guid: 61140666745039943b0163d7dbbdf981, type: 2}
   skyboxWhite: {fileID: 2100000, guid: eaaa26df9ab7c2a43821db8515eb6947, type: 2}
   floorBlack: {fileID: 2100000, guid: df45d50e9cf13d24da0d7621b7a47345, type: 2}
   floorWhiteEmissive: {fileID: 2100000, guid: 13bb51b416d97cc438ca3626116f1f48, type: 2}
   startSceneAudio: {fileID: 8300000, guid: 444cc31681594904fa607bebb405b3a4, type: 3}
+  afterBlackAudio: {fileID: 8300000, guid: c7184d3d2d79bd64ebff949965db5c5c, type: 3}
   revealSound: {fileID: 8300000, guid: 6a3f5efd9a02e2b498aeb0517ee4c807, type: 3}
   afterWhiteAudio: {fileID: 8300000, guid: c5547390c9046d844b71004306258ba0, type: 3}
   startAudioDelay: 1
@@ -1435,15 +1437,15 @@ MonoBehaviour:
   nextSceneName: Pinchos
   interactKey: 101
   blackScreen: {fileID: 1652480107}
-  blackScreenDuration: 12
+  fadeInDuration: 2
+  blackScreenDuration: 13
   blackScreenAudio: {fileID: 58340993}
-  blackScreenAudioDelay: 1
+  blackScreenAudioDelay: 1.5
   audiosToFadeOut:
   - {fileID: 1594292182}
   - {fileID: 952751711}
   - {fileID: 1930191797}
-  audioFadeSpeed: 1.5
-  pressAudio: {fileID: 1399113463}
+  audioFadeSpeed: 2
   footstepAudio: {fileID: 1980311426}
 --- !u!1 &1221984516
 GameObject:
@@ -2559,6 +2561,7 @@ GameObject:
   - component: {fileID: 1825822864}
   - component: {fileID: 1825822863}
   - component: {fileID: 1825822867}
+  - component: {fileID: 1825822868}
   m_Layer: 0
   m_Name: AreaPuerta
   m_TagString: Untagged
@@ -2665,9 +2668,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   door: {fileID: 1526678550}
-  riseHeight: 2.3
+  riseHeight: 2.25
   riseDuration: 3
   riseAudio: {fileID: 1552717869}
+--- !u!114 &1825822868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1825822862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3baba9ddde532374abd777c46272296c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anomalousSkybox: {fileID: 1739127696}
+  whiteSkybox: {fileID: 2100000, guid: 61140666745039943b0163d7dbbdf981, type: 2}
 --- !u!1 &1887060161
 GameObject:
   m_ObjectHideFlags: 0
@@ -2761,7 +2778,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: c7184d3d2d79bd64ebff949965db5c5c, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -3113,7 +3130,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.5
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 0
   Mute: 0

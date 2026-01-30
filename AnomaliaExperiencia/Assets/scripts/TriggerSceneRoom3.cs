@@ -13,9 +13,10 @@ public class TriggerSceneRoom3 : MonoBehaviour
 
     [Header("Black Screen")]
     public CanvasGroup blackScreen;
+    public float fadeInDuration = 2f;
     public float blackScreenDuration = 12f;
 
-    [Header("Black screen audio (plays after 1s)")]
+    [Header("Black screen audio (plays after delay)")]
     public AudioSource blackScreenAudio;
     public float blackScreenAudioDelay = 1f;
 
@@ -23,11 +24,8 @@ public class TriggerSceneRoom3 : MonoBehaviour
     public List<AudioSource> audiosToFadeOut = new List<AudioSource>();
     public float audioFadeSpeed = 1.5f;
 
-    [Header("Sound when pressing E")]
-    public AudioSource pressAudio;
-
-    [Header("Footsteps")]
-    public AudioSource footstepAudio;   // 👈 PASOS
+    [Header("Footsteps (must NEVER sound)")]
+    public AudioSource footstepAudio;
 
     bool playerInside;
     bool used;
@@ -51,53 +49,62 @@ public class TriggerSceneRoom3 : MonoBehaviour
         if (Input.GetKeyDown(interactKey))
         {
             used = true;
-
-            if (pressAudio != null)
-                pressAudio.Play();
-
             StartCoroutine(Sequence());
         }
     }
 
     IEnumerator Sequence()
     {
+        // 🔎 agarramos todos los audios activos
         allAudioSources = FindObjectsOfType<AudioSource>();
 
-        // 🔇 apagar pasos
+        // 🚫 PASOS: existen pero no pueden sonar
         if (footstepAudio != null)
+        {
+            footstepAudio.Stop();
             footstepAudio.mute = true;
+            footstepAudio.enabled = false;
+        }
 
-        // Fade out definidos
+        // 🔉 fade out de audios específicos
         foreach (var a in audiosToFadeOut)
         {
             if (a != null)
                 StartCoroutine(FadeOutAudio(a));
         }
 
-        // Pausar el resto
+        // 🔇 apagar absolutamente todo menos el blackScreenAudio
         foreach (var a in allAudioSources)
         {
             if (a == null)
                 continue;
 
-            if (a == blackScreenAudio || a == pressAudio)
+            if (a == blackScreenAudio)
                 continue;
 
-            if (audiosToFadeOut.Contains(a))
-                continue;
-
-            a.Pause();
+            a.Stop();
         }
 
-        // Black screen ON
+        // 🖤 fade in del black screen
         if (blackScreen != null)
         {
-            blackScreen.alpha = 1f;
             blackScreen.blocksRaycasts = true;
+
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime / fadeInDuration;
+                blackScreen.alpha = Mathf.Clamp01(t);
+                yield return null;
+            }
+
+            blackScreen.alpha = 1f;
         }
 
+        // ⏱ delay antes del audio
         yield return new WaitForSeconds(blackScreenAudioDelay);
 
+        // 🔊 único audio permitido
         if (blackScreenAudio != null)
             blackScreenAudio.Play();
 
@@ -111,7 +118,7 @@ public class TriggerSceneRoom3 : MonoBehaviour
         if (source == null)
             yield break;
 
-        float start = source.volume;
+        float startVolume = source.volume;
 
         while (source.volume > 0f)
         {
@@ -124,7 +131,7 @@ public class TriggerSceneRoom3 : MonoBehaviour
         }
 
         source.Stop();
-        source.volume = start;
+        source.volume = startVolume;
     }
 
     void OnTriggerEnter(Collider other)

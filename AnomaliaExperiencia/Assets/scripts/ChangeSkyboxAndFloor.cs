@@ -6,7 +6,10 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
     [Header("References")]
     public Camera mainCamera;
     public Renderer floorRenderer;
-    public AudioSource audioSource;
+
+    [Header("Audio Sources")]
+    public AudioSource audioSource;        // 👈 el de siempre
+    public AudioSource afterBlackSource;   // 👈 NUEVO: solo para after black
 
     [Header("Skyboxes")]
     public Material skyboxBlack;
@@ -16,11 +19,11 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
     public Material floorBlack;
     public Material floorWhiteEmissive;
 
-    [Header("Audio")]
-    public AudioClip startSceneAudio;      // al segundo de empezar
-    public AudioClip afterBlackAudio;      // 👈 cuando deja de ser negro
-    public AudioClip revealSound;          // refuerzo del cambio
-    public AudioClip afterWhiteAudio;      // 2s después del blanco
+    [Header("Audio Clips")]
+    public AudioClip startSceneAudio;
+    public AudioClip afterBlackAudio;      // ahora va en afterBlackSource
+    public AudioClip revealSound;
+    public AudioClip afterWhiteAudio;
 
     [Header("Timing")]
     public float startAudioDelay = 1f;
@@ -39,7 +42,7 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
 
         DynamicGI.UpdateEnvironment();
 
-        // audio inicial (opcional)
+        // audio inicial
         if (startSceneAudio != null && audioSource != null)
             StartCoroutine(PlayStartAudio());
 
@@ -56,7 +59,7 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        // 🔁 TRANSICIÓN: NEGRO → BLANCO
+        // 🔁 NEGRO → BLANCO
         RenderSettings.skybox = skyboxWhite;
         DynamicGI.UpdateEnvironment();
 
@@ -65,15 +68,18 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
 
         floorRenderer.material = floorWhiteEmissive;
 
-        // 🔊 AUDIO CLAVE: terminó lo negro
-        if (audioSource != null && afterBlackAudio != null)
-            audioSource.PlayOneShot(afterBlackAudio);
+        // 🔊 AFTER BLACK → AudioSource dedicado
+        if (afterBlackSource != null && afterBlackAudio != null)
+        {
+            afterBlackSource.clip = afterBlackAudio;
+            afterBlackSource.Play();
+        }
 
-        // 🔊 sonido de revelado (opcional, puede ser el mismo)
+        // 🔊 reveal sound (queda igual)
         if (audioSource != null && revealSound != null)
             audioSource.PlayOneShot(revealSound);
 
-        // 🔊 2 segundos después
+        // 🔊 after white (queda igual)
         if (audioSource != null && afterWhiteAudio != null)
         {
             yield return new WaitForSeconds(afterWhiteDelay);
