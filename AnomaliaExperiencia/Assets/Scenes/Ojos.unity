@@ -3457,6 +3457,7 @@ MonoBehaviour:
   fadeDuracion: 2
   musicaAmbiente: {fileID: 603178226}
   duracionFadeMusica: 1
+  footstepAudio: {fileID: 1527193199}
   audioBlackScreen: {fileID: 1698771238}
   delayAudioBlackScreen: 1
   duracionBlackScreen: 8

@@ -16184,6 +16184,7 @@ MonoBehaviour:
   fadeDuration: 2
   handleAudio: {fileID: 1965838066}
   blockedAudio: {fileID: 1692013280}
+  footstepAudio: {fileID: 2072123846}
   interactionKey: 101
 --- !u!1001 &750369575
 PrefabInstance:

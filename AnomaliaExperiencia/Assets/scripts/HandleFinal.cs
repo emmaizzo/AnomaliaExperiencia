@@ -10,9 +10,12 @@ public class HandleFinal : MonoBehaviour
     bool used = false;
 
     [Header("Audio")]
-    public AudioSource handleAudio;   // sonido inmediato
-    public AudioSource audioToPlay;   // audio con delay
+    public AudioSource handleAudio;
+    public AudioSource audioToPlay;
     public float audioDelay = 2f;
+
+    [Header("Footsteps Player")]
+    public AudioSource footstepAudio; // 👈 arrastrar pasos del player acá
 
     [Header("White Image")]
     public CanvasGroup whiteImageCanvas;
@@ -47,18 +50,20 @@ public class HandleFinal : MonoBehaviour
 
     IEnumerator PlaySequence()
     {
-        // aparece la imagen blanca primero
+        // 🔇 silenciar pasos
+        if (footstepAudio != null)
+            footstepAudio.mute = true; // o Stop() si es loop
+
+        // imagen blanca
         if (whiteImageCanvas != null)
             yield return StartCoroutine(FadeCanvas(whiteImageCanvas, 0f, 1f, whiteFadeDuration));
 
-        // espera 1 segundo
         yield return new WaitForSeconds(topImageDelay);
 
-        // aparece la imagen de arriba
+        // imagen superior
         if (topImageCanvas != null)
             yield return StartCoroutine(FadeCanvas(topImageCanvas, 0f, 1f, topFadeDuration));
 
-        // delay del audio principal
         yield return new WaitForSeconds(audioDelay);
 
         if (audioToPlay != null)

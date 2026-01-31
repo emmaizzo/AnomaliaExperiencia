@@ -34,41 +34,40 @@ public class RisingWater : MonoBehaviour
     public Vector3 objectTargetOffset = Vector3.up * 1.5f;
     public AudioSource objectAppearAudio;
 
-    // ----------------------------
-    // INTRO BLACK SCREEN
-    // ----------------------------
+    // 🌱 PARTICULAS PLANTA
+    [Header("Plant Particles")]
+    public ParticleSystem[] plantParticles;
+
+    // 🌊 PARTICULAS DE AGUA
+    [Header("Water Particles")]
+    public float waterParticlesStartTime = 25f;
+    public ParticleSystem[] waterParticles;
+
+    // ---------------- INTRO BLACK SCREEN ----------------
     [Header("Intro Black Screen")]
     public CanvasGroup blackScreen;
     public float blackScreenDuration = 7f;
     public AudioSource blackScreenSecondAudio;
     public AudioSource blackScreenEndAudio;
 
-    // ----------------------------
-    // PLAYER LOCK
-    // ----------------------------
+    // ---------------- PLAYER LOCK ----------------
     [Header("Player Lock")]
     public MonoBehaviour playerController;
     public AudioSource playerFootstepsAudio;
 
-    // ----------------------------
-    // EXTRA SFX
-    // ----------------------------
+    // ---------------- EXTRA SFX ----------------
     [Header("Extra SFX")]
     public AudioSource waterStartAudio;
     public float waterStartAudioDelay = 1.5f;
     public AudioSource plantFinishedAudio;
     public AudioSource afterPlantFinishedAudio;
 
-    // ----------------------------
-    // UNDERWATER SFX
-    // ----------------------------
+    // ---------------- UNDERWATER SFX ----------------
     [Header("Underwater SFX")]
     public AudioSource drowningAudio;
     public float drowningFadeSpeed = 2f;
 
-    // ----------------------------
-    // TIMED SFX
-    // ----------------------------
+    // ---------------- TIMED SFX ----------------
     [Header("Timed SFX")]
     public AudioSource midSceneAudio;
     public float midSceneStartTime = 45f;
@@ -88,8 +87,8 @@ public class RisingWater : MonoBehaviour
     bool midSceneStarted;
     bool afterPlantStarted;
 
-    // 🔴 NUEVO
     bool roomAudioStopped;
+    bool waterParticlesStarted;
 
     Vector3 objectStartPos;
     Vector3 objectTargetPos;
@@ -99,40 +98,49 @@ public class RisingWater : MonoBehaviour
         surfaceVolume.weight = 1f;
         underwaterVolume.weight = 0f;
 
-        if (chillWaterAudio != null)
+        // apagar partículas de planta
+        if (plantParticles != null)
+            foreach (var ps in plantParticles)
+                if (ps) ps.Stop();
+
+        // apagar partículas de agua
+        if (waterParticles != null)
+            foreach (var ps in waterParticles)
+                if (ps) ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        if (chillWaterAudio)
         {
             chillWaterAudio.loop = true;
             chillWaterAudio.volume = 1f;
         }
 
-        if (strongWaterAudio != null)
+        if (strongWaterAudio)
         {
             strongWaterAudio.loop = true;
             strongWaterAudio.volume = 0f;
             strongWaterAudio.Play();
         }
 
-        if (risingObject != null)
+        if (risingObject)
         {
             objectStartPos = risingObject.position;
             objectTargetPos = objectStartPos + objectTargetOffset;
         }
 
-        if (drowningAudio != null)
+        if (drowningAudio)
         {
             drowningAudio.loop = true;
             drowningAudio.volume = 0f;
             drowningAudio.Play();
         }
 
-        if (blackScreen != null)
+        if (blackScreen)
             StartCoroutine(BlackScreenRoutine());
     }
 
     void Update()
     {
-        if (roomAudioStopped)
-            return;
+        if (roomAudioStopped) return;
 
         sceneTimer += Time.deltaTime;
 
@@ -142,15 +150,15 @@ public class RisingWater : MonoBehaviour
         HandleRisingObject();
         HandleMidSceneAudio();
         HandleMidScenePitch();
+        HandleWaterParticles();
     }
+
+    // ---------------- BLACK SCREEN ----------------
 
     IEnumerator BlackScreenRoutine()
     {
-        if (playerController != null)
-            playerController.enabled = false;
-
-        if (playerFootstepsAudio != null)
-            playerFootstepsAudio.mute = true;
+        if (playerController) playerController.enabled = false;
+        if (playerFootstepsAudio) playerFootstepsAudio.mute = true;
 
         blackScreen.alpha = 1f;
         blackScreen.blocksRaycasts = true;
@@ -166,11 +174,8 @@ public class RisingWater : MonoBehaviour
 
         blackScreenEndAudio?.Play();
 
-        if (playerController != null)
-            playerController.enabled = true;
-
-        if (playerFootstepsAudio != null)
-            playerFootstepsAudio.mute = false;
+        if (playerController) playerController.enabled = true;
+        if (playerFootstepsAudio) playerFootstepsAudio.mute = false;
     }
 
     IEnumerator PlayWaterStartDelayed()
@@ -178,6 +183,8 @@ public class RisingWater : MonoBehaviour
         yield return new WaitForSeconds(waterStartAudioDelay);
         waterStartAudio?.Play();
     }
+
+    // ---------------- AUDIO TIMELINE ----------------
 
     void HandleAudioTimeline()
     {
@@ -192,15 +199,17 @@ public class RisingWater : MonoBehaviour
 
         if (strongStarted)
         {
-            if (chillWaterAudio != null)
+            if (chillWaterAudio)
                 chillWaterAudio.volume = Mathf.MoveTowards(
                     chillWaterAudio.volume, 0f, Time.deltaTime * audioFadeSpeed);
 
-            if (strongWaterAudio != null)
+            if (strongWaterAudio)
                 strongWaterAudio.volume = Mathf.MoveTowards(
                     strongWaterAudio.volume, 1f, Time.deltaTime * audioFadeSpeed);
         }
     }
+
+    // ---------------- WATER ----------------
 
     void HandleWater()
     {
@@ -223,14 +232,50 @@ public class RisingWater : MonoBehaviour
             transform.position += Vector3.up * speed * Time.deltaTime;
     }
 
+    // ---------------- WATER PARTICLES ----------------
+
+    void HandleWaterParticles()
+    {
+        if (!waterParticlesStarted && sceneTimer >= waterParticlesStartTime)
+        {
+            waterParticlesStarted = true;
+
+            if (waterParticles != null)
+                foreach (var ps in waterParticles)
+                    if (ps) ps.Play();
+        }
+
+        if (!waterParticlesStarted) return;
+
+        float waterY = transform.position.y;
+
+        if (waterParticles == null) return;
+
+        foreach (var ps in waterParticles)
+        {
+            if (!ps || !ps.isPlaying) continue;
+
+            if (waterY > ps.transform.position.y)
+            {
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+        }
+    }
+
+    // ---------------- PLANTA ----------------
+
     void HandleRisingObject()
     {
-        if (risingObject == null) return;
+        if (!risingObject) return;
 
         if (!objectRising && sceneTimer >= objectAppearTime)
         {
             objectRising = true;
             objectAppearAudio?.Play();
+
+            if (plantParticles != null)
+                foreach (var ps in plantParticles)
+                    if (ps) ps.Play();
         }
 
         if (!objectRising) return;
@@ -247,7 +292,11 @@ public class RisingWater : MonoBehaviour
             plantFinishedSoundPlayed = true;
             plantFinishedAudio?.Play();
 
-            if (plantFinishedAudio != null && !afterPlantStarted)
+            if (plantParticles != null)
+                foreach (var ps in plantParticles)
+                    if (ps) ps.Stop();
+
+            if (!afterPlantStarted)
                 StartCoroutine(PlayAfterPlantFinished());
         }
     }
@@ -256,33 +305,32 @@ public class RisingWater : MonoBehaviour
     {
         afterPlantStarted = true;
 
-        if (plantFinishedAudio != null && plantFinishedAudio.clip != null)
+        if (plantFinishedAudio?.clip != null)
             yield return new WaitForSeconds(plantFinishedAudio.clip.length);
 
         afterPlantFinishedAudio?.Play();
     }
 
+    // ---------------- UNDERWATER ----------------
+
     void HandleUnderwater()
     {
-        if (Camera.main == null) return;
+        if (!Camera.main) return;
 
-        float waterSurfaceY = transform.position.y;
+        float waterY = transform.position.y;
         float camY = Camera.main.transform.position.y;
 
-        float target = camY < waterSurfaceY + waterOffset ? 1f : 0f;
+        float target = camY < waterY + waterOffset ? 1f : 0f;
 
-        if (waterPlayerPhysics != null)
+        if (waterPlayerPhysics)
             waterPlayerPhysics.SetUnderwater(target > 0.5f);
 
         underwaterVolume.weight = Mathf.Lerp(
-            underwaterVolume.weight,
-            target,
-            Time.deltaTime * volumeLerpSpeed
-        );
+            underwaterVolume.weight, target, Time.deltaTime * volumeLerpSpeed);
 
         surfaceVolume.weight = 1f - underwaterVolume.weight;
 
-        if (drowningAudio != null)
+        if (drowningAudio)
         {
             float targetVol = target > 0.5f ? 1f : 0f;
 
@@ -292,18 +340,15 @@ public class RisingWater : MonoBehaviour
                 Time.deltaTime * drowningFadeSpeed
             );
 
-            if (targetVol == 0f && drowningAudio.volume <= 0.01f)
-            {
-                if (drowningAudio.isPlaying)
-                    drowningAudio.Stop();
-            }
-
             if (targetVol == 1f && !drowningAudio.isPlaying)
-            {
                 drowningAudio.Play();
-            }
+
+            if (targetVol == 0f && drowningAudio.volume <= 0.01f)
+                drowningAudio.Stop();
         }
     }
+
+    // ---------------- MID AUDIO ----------------
 
     void HandleMidSceneAudio()
     {
@@ -313,7 +358,7 @@ public class RisingWater : MonoBehaviour
         {
             midSceneStarted = true;
 
-            if (midSceneAudio != null)
+            if (midSceneAudio)
             {
                 midSceneAudio.loop = true;
                 midSceneAudio.pitch = 1f;
@@ -324,18 +369,16 @@ public class RisingWater : MonoBehaviour
 
     void HandleMidScenePitch()
     {
-        if (!midSceneStarted) return;
-        if (midSceneAudio == null) return;
-        if (!midSceneAudio.isPlaying) return;
+        if (!midSceneStarted || !midSceneAudio) return;
 
         midSceneAudio.pitch = Mathf.MoveTowards(
             midSceneAudio.pitch,
             midSceneMaxPitch,
-            Time.deltaTime * (midScenePitchSpeed * 0.25f)
-        );
+            Time.deltaTime * (midScenePitchSpeed * 0.25f));
     }
 
-    // 🔴 se llama desde InteractToChangeScene
+    // ---------------- STOP ALL AUDIO ----------------
+
     public void StopAllRoomAudio()
     {
         roomAudioStopped = true;
@@ -356,8 +399,7 @@ public class RisingWater : MonoBehaviour
 
         foreach (var a in audios)
         {
-            if (a == null) continue;
-
+            if (!a) continue;
             a.Stop();
             a.volume = 0f;
         }

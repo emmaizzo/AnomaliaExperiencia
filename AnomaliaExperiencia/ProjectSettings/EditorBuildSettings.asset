@@ -11,4 +11,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/PasilloInfinito.unity
     guid: bc3c3a87596ad124bb664e7f81f2fe3b
+  - enabled: 1
+    path: Assets/Scenes/Ojos.unity
+    guid: 6b558ab19e9ff134fa54c63858fb5ca8
+  - enabled: 1
+    path: Assets/Scenes/Vacio.unity
+    guid: 1c5541cf05334a64faff3ba3162c7976
+  - enabled: 1
+    path: Assets/Scenes/Pinchos.unity
+    guid: a53cd1ba5a13aac49971b40bb739e6d9
+  - enabled: 1
+    path: Assets/Scenes/Agua.unity
+    guid: 2be8bfcb19b62f44699f0b9edd25980f
+  - enabled: 1
+    path: Assets/Scenes/PasilloFinal.unity
+    guid: 02ab1c570953fcc41bf2615e54d6476e
   m_configObjects: {}

@@ -11,10 +11,13 @@ public class DoorHandleInteract : MonoBehaviour
     public float fadeDuration = 2f;
 
     [Header("Audio")]
-    public AudioSource audioToFadeOut;     // música / ambiente
+    public AudioSource audioToFadeOut;
     public float audioFadeSpeed = 1f;
 
-    public AudioSource touchAudio;         // 🔊 sonido inmediato al tocar E
+    public AudioSource touchAudio;
+
+    [Header("Footsteps Player")]
+    public AudioSource footstepAudio; // 👈 arrastrar pasos del player acá
 
     bool playerInside = false;
     bool used = false;
@@ -25,7 +28,6 @@ public class DoorHandleInteract : MonoBehaviour
         {
             used = true;
 
-            // 🔊 sonido instantáneo al interactuar
             if (touchAudio != null)
                 touchAudio.Play();
 
@@ -35,7 +37,11 @@ public class DoorHandleInteract : MonoBehaviour
 
     IEnumerator Sequence()
     {
-        // Fade out del audio ambiente
+        // 🔇 silenciar pasos al iniciar transición
+        if (footstepAudio != null)
+            footstepAudio.mute = true;
+
+        // Fade out audio ambiente
         if (audioToFadeOut != null)
             StartCoroutine(FadeOutAudio());
 

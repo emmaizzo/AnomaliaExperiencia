@@ -18645,6 +18645,7 @@ MonoBehaviour:
   handleAudio: {fileID: 894201004}
   audioToPlay: {fileID: 1568202632}
   audioDelay: 1.5
+  footstepAudio: {fileID: 113737257}
   whiteImageCanvas: {fileID: 44308924}
   whiteFadeDuration: 1
   topImageCanvas: {fileID: 1628945636}
@@ -30719,7 +30720,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 105781508}
   audioFadeDuration: 1
-  targetVolume: 0.7
+  targetVolume: 0.6
   targetLight: {fileID: 1210265930}
   lightFadeDuration: 1
   lightIntensityOn: 1

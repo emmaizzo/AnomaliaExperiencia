@@ -13,9 +13,10 @@ public class DoorHandleSalaEspera : MonoBehaviour
 
     [Header("Audio")]
     public AudioSource handleAudio;
-
-    // 👉 nuevo sonido cuando está bloqueado
     public AudioSource blockedAudio;
+
+    [Header("Player Footsteps")]
+    public AudioSource footstepAudio; // 👈 arrastrá acá el audio de pasos del player
 
     [Header("Interaction")]
     public KeyCode interactionKey = KeyCode.E;
@@ -30,7 +31,6 @@ public class DoorHandleSalaEspera : MonoBehaviour
 
         if (Input.GetKeyDown(interactionKey))
         {
-            // 🔒 sigue bloqueado
             if (!DoorCloseTrigger.lastAudioFinished)
             {
                 if (blockedAudio != null && !blockedAudio.isPlaying)
@@ -39,7 +39,6 @@ public class DoorHandleSalaEspera : MonoBehaviour
                 return;
             }
 
-            // ✅ ya se puede usar
             used = true;
             StartCoroutine(Sequence());
         }
@@ -49,6 +48,10 @@ public class DoorHandleSalaEspera : MonoBehaviour
     {
         if (handleAudio != null)
             handleAudio.Play();
+
+        // 🔇 apagar pasos
+        if (footstepAudio != null)
+            footstepAudio.mute = true;
 
         yield return StartCoroutine(FadeToBlack());
 

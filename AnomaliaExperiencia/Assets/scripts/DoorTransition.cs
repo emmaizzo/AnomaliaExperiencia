@@ -9,6 +9,9 @@ public class DoorTransition : MonoBehaviour
     public AudioFadeController audioFade;
     public AudioSource doorSound;
 
+    [Header("Player Footsteps")]
+    public AudioSource footstepAudio; // 👈 arrastrar audio de pasos acá
+
     [Header("Audio durante black screen")]
     public AudioSource blackScreenAudio;
     public float blackScreenAudioDelay = 1f;
@@ -36,6 +39,10 @@ public class DoorTransition : MonoBehaviour
         // 🔊 Sonido de puerta
         if (doorSound != null)
             doorSound.Play();
+
+        // 🔇 Silenciar pasos
+        if (footstepAudio != null)
+            footstepAudio.mute = true;
 
         // 🔉 Fade out de audios
         if (audioFade != null)

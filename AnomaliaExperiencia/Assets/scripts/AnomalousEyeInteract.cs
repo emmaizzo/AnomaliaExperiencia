@@ -14,12 +14,13 @@ public class AnomalousEyeInteract : MonoBehaviour
     public AudioSource musicaAmbiente;
     public float duracionFadeMusica = 1.5f;
 
-    // 🔊 AUDIO DURANTE BLACK SCREEN (AGREGADO)
+    [Header("Footsteps Player")]
+    public AudioSource footstepAudio; // 👈 arrastrar audio de pasos acá
+
     [Header("Audio Black Screen")]
     public AudioSource audioBlackScreen;
     public float delayAudioBlackScreen = 2f;
 
-    // ⏱️ DURACIÓN TOTAL DEL NEGRO (AGREGADO)
     public float duracionBlackScreen = 8f;
 
     [Header("Escena")]
@@ -46,6 +47,10 @@ public class AnomalousEyeInteract : MonoBehaviour
     IEnumerator FadeOutCompleto()
     {
         fadeCanvas.blocksRaycasts = true;
+
+        // 🔇 silenciar pasos
+        if (footstepAudio != null)
+            footstepAudio.mute = true;
 
         float t = 0f;
         float volumenInicial = musicaAmbiente != null ? musicaAmbiente.volume : 0f;
@@ -74,19 +79,17 @@ public class AnomalousEyeInteract : MonoBehaviour
         if (musicaAmbiente != null)
             musicaAmbiente.volume = 0f;
 
-        // ⏱️ ESPERA 2s Y REPRODUCE AUDIO
+        // 🎙️ audio en negro
         if (audioBlackScreen != null)
         {
             yield return new WaitForSeconds(delayAudioBlackScreen);
             audioBlackScreen.Play();
         }
 
-        // ⏱️ ESPERA EL RESTO HASTA COMPLETAR 8s DE NEGRO
         float tiempoRestante = duracionBlackScreen - delayAudioBlackScreen;
         if (tiempoRestante > 0f)
             yield return new WaitForSeconds(tiempoRestante);
 
-        // 🚪 CAMBIO DE ESCENA
         SceneManager.LoadScene(nombreEscena);
     }
 }

@@ -17,7 +17,7 @@ public class InteractToChangeScene : MonoBehaviour
     [Header("Black Screen")]
     public CanvasGroup blackScreen;
     public float blackScreenDuration = 12f;
-    public AudioSource blackScreenAudio; // suena al segundo 1
+    public AudioSource blackScreenAudio;
 
     // ----------------------------
     // Fade Out Other Audios
@@ -27,7 +27,13 @@ public class InteractToChangeScene : MonoBehaviour
     public float fadeOutSpeed = 1.5f;
 
     // ----------------------------
-    // NUEVO – referencia a la habitación
+    // Footsteps Player
+    // ----------------------------
+    [Header("Footsteps Player")]
+    public AudioSource footstepAudio; // 👈 arrastrar acá
+
+    // ----------------------------
+    // Room Controller
     // ----------------------------
     [Header("Room Controller")]
     public RisingWater risingWater;
@@ -43,11 +49,15 @@ public class InteractToChangeScene : MonoBehaviour
 
     IEnumerator BlackScreenAndChangeScene()
     {
-        // 👉 corta toda la lógica de audio de la habitación
+        // 🔇 apagar pasos
+        if (footstepAudio != null)
+            footstepAudio.mute = true; // o Stop() si es loop
+
+        // corta audios de la habitación
         if (risingWater != null)
             risingWater.StopAllRoomAudio();
 
-        // fade de audios externos (player, ambiente general, etc)
+        // fade de otros audios
         foreach (var a in audiosToFadeOut)
         {
             if (a != null)

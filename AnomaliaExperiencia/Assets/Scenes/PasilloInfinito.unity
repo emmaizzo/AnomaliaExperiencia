@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.47655526, g: 0.28527555, b: 0.4444675, a: 1}
+  m_IndirectSpecularColor: {r: 0.03546372, g: 0.02122857, b: 0.033074193, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1729,6 +1729,7 @@ MonoBehaviour:
   fadeController: {fileID: 56269821}
   audioFade: {fileID: 603486470}
   doorSound: {fileID: 872690673}
+  footstepAudio: {fileID: 1215010422}
   blackScreenAudio: {fileID: 1257599835}
   blackScreenAudioDelay: 2.5
   blackScreenDuration: 13

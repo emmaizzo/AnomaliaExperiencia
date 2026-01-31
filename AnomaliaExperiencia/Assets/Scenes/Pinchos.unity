@@ -1861,6 +1861,7 @@ MonoBehaviour:
   audioToFadeOut: {fileID: 2119221730}
   audioFadeSpeed: 1
   touchAudio: {fileID: 1389881852}
+  footstepAudio: {fileID: 866373915}
 --- !u!1001 &424095541
 PrefabInstance:
   m_ObjectHideFlags: 0
