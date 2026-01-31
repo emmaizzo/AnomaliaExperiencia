@@ -34,11 +34,9 @@ public class RisingWater : MonoBehaviour
     public Vector3 objectTargetOffset = Vector3.up * 1.5f;
     public AudioSource objectAppearAudio;
 
-    // 🌱 PARTICULAS PLANTA
     [Header("Plant Particles")]
     public ParticleSystem[] plantParticles;
 
-    // 🌊 PARTICULAS DE AGUA
     [Header("Water Particles")]
     public float waterParticlesStartTime = 25f;
     public ParticleSystem[] waterParticles;
@@ -49,6 +47,12 @@ public class RisingWater : MonoBehaviour
     public float blackScreenDuration = 7f;
     public AudioSource blackScreenSecondAudio;
     public AudioSource blackScreenEndAudio;
+
+    // 🟣 TITULO
+    [Header("Title")]
+    public CanvasGroup titleCanvas;
+    public float titleFadeDuration = 0.5f;
+    public float titleDisappearEarlier = 1f; // segundos antes
 
     // ---------------- PLAYER LOCK ----------------
     [Header("Player Lock")]
@@ -98,12 +102,13 @@ public class RisingWater : MonoBehaviour
         surfaceVolume.weight = 1f;
         underwaterVolume.weight = 0f;
 
-        // apagar partículas de planta
+        if (titleCanvas)
+            titleCanvas.alpha = 0f;
+
         if (plantParticles != null)
             foreach (var ps in plantParticles)
                 if (ps) ps.Stop();
 
-        // apagar partículas de agua
         if (waterParticles != null)
             foreach (var ps in waterParticles)
                 if (ps) ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -153,7 +158,7 @@ public class RisingWater : MonoBehaviour
         HandleWaterParticles();
     }
 
-    // ---------------- BLACK SCREEN ----------------
+    // ---------------- BLACK SCREEN + TITULO ----------------
 
     IEnumerator BlackScreenRoutine()
     {
@@ -167,7 +172,16 @@ public class RisingWater : MonoBehaviour
 
         blackScreenSecondAudio?.Play();
 
-        yield return new WaitForSeconds(blackScreenDuration - 1f);
+        // 🟣 TITULO: aparece 1s después
+        if (titleCanvas)
+            yield return StartCoroutine(FadeCanvas(titleCanvas, 0f, 1f));
+
+        // espera hasta 1s antes del final
+        yield return new WaitForSeconds(blackScreenDuration - 2f - titleDisappearEarlier);
+
+        // 🟣 TITULO: se va 1s antes
+        if (titleCanvas)
+            yield return StartCoroutine(FadeCanvas(titleCanvas, 1f, 0f));
 
         blackScreen.alpha = 0f;
         blackScreen.blocksRaycasts = false;
@@ -176,6 +190,21 @@ public class RisingWater : MonoBehaviour
 
         if (playerController) playerController.enabled = true;
         if (playerFootstepsAudio) playerFootstepsAudio.mute = false;
+    }
+
+    IEnumerator FadeCanvas(CanvasGroup cg, float from, float to)
+    {
+        float t = 0f;
+        cg.alpha = from;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime / titleFadeDuration;
+            cg.alpha = Mathf.Lerp(from, to, t);
+            yield return null;
+        }
+
+        cg.alpha = to;
     }
 
     IEnumerator PlayWaterStartDelayed()
@@ -249,16 +278,12 @@ public class RisingWater : MonoBehaviour
 
         float waterY = transform.position.y;
 
-        if (waterParticles == null) return;
-
         foreach (var ps in waterParticles)
         {
             if (!ps || !ps.isPlaying) continue;
 
             if (waterY > ps.transform.position.y)
-            {
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
         }
     }
 
@@ -382,7 +407,6 @@ public class RisingWater : MonoBehaviour
     public void StopAllRoomAudio()
     {
         roomAudioStopped = true;
-
         StopAllCoroutines();
 
         AudioSource[] audios =

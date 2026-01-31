@@ -15380,7 +15380,7 @@ MonoBehaviour:
   playerInput: {fileID: 2072123851}
   characterController: {fileID: 2072123855}
   fadeCanvas: {fileID: 1336513726}
-  fadeDuration: 2
+  fadeDuration: 4
 --- !u!1 &711790327 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4e84fcba9008e6d4f9e1f63746c2b8af,

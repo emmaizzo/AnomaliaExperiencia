@@ -8,8 +8,8 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
     public Renderer floorRenderer;
 
     [Header("Audio Sources")]
-    public AudioSource audioSource;        // 👈 el de siempre
-    public AudioSource afterBlackSource;   // 👈 NUEVO: solo para after black
+    public AudioSource audioSource;
+    public AudioSource afterBlackSource;
 
     [Header("Skyboxes")]
     public Material skyboxBlack;
@@ -21,7 +21,7 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
 
     [Header("Audio Clips")]
     public AudioClip startSceneAudio;
-    public AudioClip afterBlackAudio;      // ahora va en afterBlackSource
+    public AudioClip afterBlackAudio;
     public AudioClip revealSound;
     public AudioClip afterWhiteAudio;
 
@@ -29,6 +29,10 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
     public float startAudioDelay = 1f;
     public float delay = 10f;
     public float afterWhiteDelay = 2f;
+
+    [Header("Title")]
+    public CanvasGroup titleCanvas;
+    public float titleFadeDuration = 0.5f; // 👈 fade suave
 
     void Start()
     {
@@ -42,10 +46,10 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
 
         DynamicGI.UpdateEnvironment();
 
-        // audio inicial
         if (startSceneAudio != null && audioSource != null)
             StartCoroutine(PlayStartAudio());
 
+        StartCoroutine(HandleTitle());
         StartCoroutine(ChangeToWhite());
     }
 
@@ -55,11 +59,46 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
         audioSource.PlayOneShot(startSceneAudio);
     }
 
+    IEnumerator HandleTitle()
+    {
+        if (titleCanvas == null)
+            yield break;
+
+        // oculto al inicio
+        titleCanvas.alpha = 0f;
+
+        // aparece 1 segundo después del inicio
+        yield return new WaitForSeconds(1f);
+        yield return StartCoroutine(FadeCanvas(titleCanvas, 0f, 1f, titleFadeDuration));
+
+        // permanece visible hasta 1 segundo antes del cambio
+        float visibleTime = delay - 2f - titleFadeDuration;
+        yield return new WaitForSeconds(Mathf.Max(0f, visibleTime));
+
+        // fade out
+        yield return StartCoroutine(FadeCanvas(titleCanvas, 1f, 0f, titleFadeDuration));
+    }
+
+    IEnumerator FadeCanvas(CanvasGroup canvas, float from, float to, float duration)
+    {
+        float t = 0f;
+        canvas.alpha = from;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            canvas.alpha = Mathf.Lerp(from, to, t / duration);
+            yield return null;
+        }
+
+        canvas.alpha = to;
+    }
+
     IEnumerator ChangeToWhite()
     {
         yield return new WaitForSeconds(delay);
 
-        // 🔁 NEGRO → BLANCO
+        // NEGRO → BLANCO
         RenderSettings.skybox = skyboxWhite;
         DynamicGI.UpdateEnvironment();
 
@@ -68,18 +107,15 @@ public class ChangeSkyboxAndFloor : MonoBehaviour
 
         floorRenderer.material = floorWhiteEmissive;
 
-        // 🔊 AFTER BLACK → AudioSource dedicado
         if (afterBlackSource != null && afterBlackAudio != null)
         {
             afterBlackSource.clip = afterBlackAudio;
             afterBlackSource.Play();
         }
 
-        // 🔊 reveal sound (queda igual)
         if (audioSource != null && revealSound != null)
             audioSource.PlayOneShot(revealSound);
 
-        // 🔊 after white (queda igual)
         if (audioSource != null && afterWhiteAudio != null)
         {
             yield return new WaitForSeconds(afterWhiteDelay);

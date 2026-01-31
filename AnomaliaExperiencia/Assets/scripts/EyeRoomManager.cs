@@ -61,9 +61,18 @@ public class EyeRoomManager : MonoBehaviour
     public float fadePanelDuration = 1.5f;
 
     // =============================
-    // 🔊 AUDIOS AGREGADOS
+    // 🖤 TÍTULO DE HABITACIÓN
     // =============================
-    [Header("Audios Nuevos")]
+    [Header("Título Habitación")]
+    public CanvasGroup tituloHabitacion;
+    public float delayAparicionTitulo = 1f;
+    public float tiempoAntesDeIrse = 1f;
+    public float fadeTituloDuration = 0.5f;
+
+    // =============================
+    // 🔊 AUDIOS
+    // =============================
+    [Header("Audios")]
     public AudioSource audioInicio;
     public float delayAudioInicio = 1f;
 
@@ -71,13 +80,10 @@ public class EyeRoomManager : MonoBehaviour
 
     int contadorClicks = 0;
     bool audioCuartoClickReproducido = false;
-    // =============================
 
     List<Vector3> posicionesUsadas = new List<Vector3>();
 
     bool ojoAnomaloSpawned = false;
-    Vector3 posicionOjoAnomalo;
-
     bool botonEnMovimiento = false;
     Vector3 botonPosInicial;
 
@@ -93,6 +99,9 @@ public class EyeRoomManager : MonoBehaviour
             panelNegro.blocksRaycasts = true;
         }
 
+        if (tituloHabitacion != null)
+            tituloHabitacion.alpha = 0f;
+
         if (botonTransform != null)
             botonPosInicial = botonTransform.localPosition;
 
@@ -104,8 +113,7 @@ public class EyeRoomManager : MonoBehaviour
 
         StartCoroutine(RutinaInicial());
         StartCoroutine(RutinaPanelYAudio());
-
-        // ▶️ AUDIO DE INICIO (AGREGADO)
+        StartCoroutine(RutinaTitulo());
         StartCoroutine(AudioInicio());
     }
 
@@ -150,7 +158,45 @@ public class EyeRoomManager : MonoBehaviour
     }
 
     // =============================
-    // 🔊 AUDIO DE INICIO (AGREGADO)
+    // 🖤 TÍTULO
+    // =============================
+    IEnumerator RutinaTitulo()
+    {
+        yield return new WaitForSeconds(delayAparicionTitulo);
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / fadeTituloDuration;
+            tituloHabitacion.alpha = Mathf.Lerp(0f, 1f, t);
+            yield return null;
+        }
+
+        tituloHabitacion.alpha = 1f;
+
+        float tiempoVisible =
+            tiempoAntesSonido
+            - delayAparicionTitulo
+            - tiempoAntesDeIrse
+            - fadeTituloDuration;
+
+        tiempoVisible = Mathf.Max(0f, tiempoVisible);
+
+        yield return new WaitForSeconds(tiempoVisible);
+
+        t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / fadeTituloDuration;
+            tituloHabitacion.alpha = Mathf.Lerp(1f, 0f, t);
+            yield return null;
+        }
+
+        tituloHabitacion.alpha = 0f;
+    }
+
+    // =============================
+    // AUDIO INICIO
     // =============================
     IEnumerator AudioInicio()
     {
@@ -185,7 +231,6 @@ public class EyeRoomManager : MonoBehaviour
                 if (botonTransform != null)
                     StartCoroutine(MoverBoton());
 
-                // 🔢 CONTADOR + AUDIO AL 5º CLICK (AGREGADO)
                 contadorClicks++;
 
                 if (contadorClicks >= 5 && !audioCuartoClickReproducido)
@@ -309,7 +354,6 @@ public class EyeRoomManager : MonoBehaviour
         ojoAnomaloSpawned = true;
 
         Quaternion rotacionFija = Quaternion.Euler(-39.111f, 43.769f, 38.189f);
-
         Instantiate(ojoAnomaloPrefab, spawnOjoAnomalo.position, rotacionFija);
     }
 

@@ -8,6 +8,10 @@ public class PinchosIntro : MonoBehaviour
     public float blackDuration = 6f;
     public float fadeOutDuration = 1f;
 
+    [Header("Title")]
+    public CanvasGroup titleCanvas;
+    public float titleFadeDuration = 0.5f;
+
     [Header("Audio")]
     public AudioSource introAudio;
     public AudioSource musicAudio;
@@ -27,7 +31,11 @@ public class PinchosIntro : MonoBehaviour
 
         blackScreen.alpha = 1f;
 
+        if (titleCanvas != null)
+            titleCanvas.alpha = 0f;
+
         StartCoroutine(IntroSequence());
+        StartCoroutine(HandleTitle());
     }
 
     IEnumerator IntroSequence()
@@ -41,7 +49,7 @@ public class PinchosIntro : MonoBehaviour
         // resto del tiempo negro
         yield return new WaitForSeconds(blackDuration - introAudioDelay);
 
-        // fade out
+        // fade out negro
         yield return StartCoroutine(FadeBlackScreen());
 
         // reactivar player
@@ -53,6 +61,23 @@ public class PinchosIntro : MonoBehaviour
 
         if (mainAudio != null)
             mainAudio.Play();
+    }
+
+    IEnumerator HandleTitle()
+    {
+        if (titleCanvas == null)
+            yield break;
+
+        // aparece 1s después de iniciar el negro
+        yield return new WaitForSeconds(1f);
+        yield return StartCoroutine(FadeCanvas(titleCanvas, 0f, 1f, titleFadeDuration));
+
+        // visible hasta 1s antes del fade out del negro
+        float visibleTime = blackDuration - 2f - titleFadeDuration;
+        yield return new WaitForSeconds(Mathf.Max(0f, visibleTime));
+
+        // fade out del título
+        yield return StartCoroutine(FadeCanvas(titleCanvas, 1f, 0f, titleFadeDuration));
     }
 
     IEnumerator FadeBlackScreen()
@@ -67,5 +92,20 @@ public class PinchosIntro : MonoBehaviour
         }
 
         blackScreen.alpha = 0f;
+    }
+
+    IEnumerator FadeCanvas(CanvasGroup canvas, float from, float to, float duration)
+    {
+        float t = 0f;
+        canvas.alpha = from;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            canvas.alpha = Mathf.Lerp(from, to, t / duration);
+            yield return null;
+        }
+
+        canvas.alpha = to;
     }
 }

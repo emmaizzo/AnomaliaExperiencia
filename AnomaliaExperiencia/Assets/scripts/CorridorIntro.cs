@@ -8,6 +8,10 @@ public class CorridorIntro : MonoBehaviour
     public float blackScreenDuration = 4f;
     public float fadeOutDuration = 2f;
 
+    [Header("Imagen / Título")]
+    public CanvasGroup titleImage;
+    public float titleFadeDuration = 0.5f;
+
     [Header("Player")]
     public MonoBehaviour playerMovementScript;
 
@@ -23,7 +27,7 @@ public class CorridorIntro : MonoBehaviour
     public float secondVoiceTime = 5f;
 
     [Header("Chill music ducking")]
-    public AudioSource chillMusic;          // ← musicA
+    public AudioSource chillMusic;
     [Range(0f, 1f)] public float duckAmount = 0.6f;
     public float duckDuration = 3f;
 
@@ -45,6 +49,9 @@ public class CorridorIntro : MonoBehaviour
         blackScreen.alpha = 1f;
         blackScreen.blocksRaycasts = true;
 
+        if (titleImage != null)
+            titleImage.alpha = 0f;
+
         if (voiceAudio != null)
             StartCoroutine(PlayVoiceAfterDelay(voiceAudio, voiceStartTime));
 
@@ -52,6 +59,7 @@ public class CorridorIntro : MonoBehaviour
             StartCoroutine(PlaySecondVoiceWithDuck());
 
         StartCoroutine(IntroSequence());
+        StartCoroutine(TitleSequence());
     }
 
     IEnumerator IntroSequence()
@@ -76,6 +84,38 @@ public class CorridorIntro : MonoBehaviour
 
         if (corridorAudio != null)
             corridorAudio.enabled = true;
+    }
+
+    IEnumerator TitleSequence()
+    {
+        // ⏱️ aparece 1 segundo después de empezar el black screen
+        yield return new WaitForSecondsRealtime(1f);
+
+        // Fade IN
+        float t = 0f;
+        while (t < titleFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            titleImage.alpha = Mathf.Lerp(0f, 1f, t / titleFadeDuration);
+            yield return null;
+        }
+
+        titleImage.alpha = 1f;
+
+        // ⏱️ se queda hasta 1 segundo antes de que termine el black screen
+        float visibleTime = blackScreenDuration - 3f;
+        yield return new WaitForSecondsRealtime(visibleTime);
+
+        // Fade OUT
+        t = 0f;
+        while (t < titleFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            titleImage.alpha = Mathf.Lerp(1f, 0f, t / titleFadeDuration);
+            yield return null;
+        }
+
+        titleImage.alpha = 0f;
     }
 
     IEnumerator PlayVoiceAfterDelay(AudioSource audio, float delay)
