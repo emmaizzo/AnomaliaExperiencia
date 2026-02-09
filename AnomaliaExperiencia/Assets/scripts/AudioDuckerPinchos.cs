@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 
 public class AudioDuckerPinchos : MonoBehaviour
@@ -18,16 +17,24 @@ public class AudioDuckerPinchos : MonoBehaviour
     float[] originalVolumes;
     Coroutine duckRoutine;
     bool isDucked;
+    bool forceDuckActive;
 
     void Awake()
     {
         originalVolumes = new float[duckAudios.Length];
+
         for (int i = 0; i < duckAudios.Length; i++)
-            originalVolumes[i] = duckAudios[i].volume;
+        {
+            if (duckAudios[i] != null)
+                originalVolumes[i] = duckAudios[i].volume;
+        }
     }
 
     void Update()
     {
+        if (forceDuckActive)
+            return;
+
         bool shouldDuck = false;
 
         foreach (var audio in triggerAudios)
@@ -41,20 +48,21 @@ public class AudioDuckerPinchos : MonoBehaviour
 
         if (shouldDuck && !isDucked)
         {
-            if (duckRoutine != null)
-                StopCoroutine(duckRoutine);
-
-            duckRoutine = StartCoroutine(FadeDuck(true));
-            isDucked = true;
+            StartDuck(true);
         }
         else if (!shouldDuck && isDucked)
         {
-            if (duckRoutine != null)
-                StopCoroutine(duckRoutine);
-
-            duckRoutine = StartCoroutine(FadeDuck(false));
-            isDucked = false;
+            StartDuck(false);
         }
+    }
+
+    void StartDuck(bool down)
+    {
+        if (duckRoutine != null)
+            StopCoroutine(duckRoutine);
+
+        duckRoutine = StartCoroutine(FadeDuck(down));
+        isDucked = down;
     }
 
     IEnumerator FadeDuck(bool down)
@@ -68,6 +76,8 @@ public class AudioDuckerPinchos : MonoBehaviour
 
             for (int i = 0; i < duckAudios.Length; i++)
             {
+                if (duckAudios[i] == null) continue;
+
                 float from = down ? originalVolumes[i] : duckedVolume;
                 float to = down ? duckedVolume : originalVolumes[i];
 
@@ -76,5 +86,28 @@ public class AudioDuckerPinchos : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    // ============================
+    // 🔥 DUCK FORZADO (CLAVE)
+    // ============================
+
+    public void ForceDuck(float duration)
+    {
+        if (duckRoutine != null)
+            StopCoroutine(duckRoutine);
+
+        StartCoroutine(ForceDuckRoutine(duration));
+    }
+
+    IEnumerator ForceDuckRoutine(float duration)
+    {
+        forceDuckActive = true;
+
+        yield return StartCoroutine(FadeDuck(true));
+        yield return new WaitForSeconds(duration);
+        yield return StartCoroutine(FadeDuck(false));
+
+        forceDuckActive = false;
     }
 }

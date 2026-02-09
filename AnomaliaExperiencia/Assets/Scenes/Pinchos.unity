@@ -1369,8 +1369,8 @@ MonoBehaviour:
   duckAudios:
   - {fileID: 354270360}
   - {fileID: 999111023}
-  duckedVolume: 0.3
-  fadeTime: 1.5
+  duckedVolume: 0.05
+  fadeTime: 0.5
 --- !u!4 &292410939
 Transform:
   m_ObjectHideFlags: 0

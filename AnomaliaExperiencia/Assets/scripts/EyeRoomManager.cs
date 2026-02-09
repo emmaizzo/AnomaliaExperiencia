@@ -78,6 +78,18 @@ public class EyeRoomManager : MonoBehaviour
 
     public AudioSource audioCuartoClick;
 
+    // =============================
+    // 🔉 DUCKING NORMATIVA
+    // =============================
+    [Header("Ducking Normativa")]
+    public AudioSource[] audiosADuckear;
+    public float duckMultiplier = 0.25f;
+    public float duckFadeTime = 0.25f;
+    public float duckDuration = 5f;
+
+    float[] volOriginales;
+    Coroutine duckRoutine;
+
     int contadorClicks = 0;
     bool audioCuartoClickReproducido = false;
 
@@ -109,6 +121,13 @@ public class EyeRoomManager : MonoBehaviour
         {
             colorAdjust = ca;
             originalColor = colorAdjust.colorFilter.value;
+        }
+
+        if (audiosADuckear != null && audiosADuckear.Length > 0)
+        {
+            volOriginales = new float[audiosADuckear.Length];
+            for (int i = 0; i < audiosADuckear.Length; i++)
+                volOriginales[i] = audiosADuckear[i].volume;
         }
 
         StartCoroutine(RutinaInicial());
@@ -238,10 +257,55 @@ public class EyeRoomManager : MonoBehaviour
                     audioCuartoClickReproducido = true;
 
                     if (audioCuartoClick != null)
+                    {
                         audioCuartoClick.Play();
+                        StartDuckNormativa();
+                    }
                 }
             }
         }
+    }
+
+    void StartDuckNormativa()
+    {
+        if (duckRoutine != null)
+            StopCoroutine(duckRoutine);
+
+        duckRoutine = StartCoroutine(DuckNormativaRoutine());
+    }
+
+    IEnumerator DuckNormativaRoutine()
+    {
+        float t = 0f;
+
+        while (t < duckFadeTime)
+        {
+            t += Time.deltaTime;
+            float lerp = t / duckFadeTime;
+
+            for (int i = 0; i < audiosADuckear.Length; i++)
+                audiosADuckear[i].volume =
+                    Mathf.Lerp(volOriginales[i], volOriginales[i] * duckMultiplier, lerp);
+
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(duckDuration);
+
+        t = 0f;
+        while (t < duckFadeTime)
+        {
+            t += Time.deltaTime;
+            float lerp = t / duckFadeTime;
+
+            for (int i = 0; i < audiosADuckear.Length; i++)
+                audiosADuckear[i].volume =
+                    Mathf.Lerp(audiosADuckear[i].volume, volOriginales[i], lerp);
+
+            yield return null;
+        }
+
+        duckRoutine = null;
     }
 
     void AcelerarMusica()

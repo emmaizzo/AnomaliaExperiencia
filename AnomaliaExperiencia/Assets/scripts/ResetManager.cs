@@ -40,7 +40,10 @@ public class ResetManager : MonoBehaviour
     {
         // 🔊 reproducir audio al iniciar reset
         if (resetAudio != null)
+        {
             resetAudio.Play();
+            FindObjectOfType<AudioDuckerPinchos>().ForceDuck(4f);
+        }
 
         // Fade to black
         yield return StartCoroutine(Fade(1f));

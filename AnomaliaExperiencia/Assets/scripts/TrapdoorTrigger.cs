@@ -80,7 +80,10 @@ public class TrapdoorTrigger : MonoBehaviour
             if (!specialAudioPlayed && triggerCount >= triggerCountNeeded)
             {
                 if (eightTimesAudio != null)
+                {
                     eightTimesAudio.Play();
+                    FindObjectOfType<AudioDuckerPinchos>().ForceDuck(4f);
+                }
 
                 specialAudioPlayed = true;
             }

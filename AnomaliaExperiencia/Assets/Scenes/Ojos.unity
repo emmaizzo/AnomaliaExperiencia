@@ -3491,6 +3491,11 @@ MonoBehaviour:
   audioInicio: {fileID: 194083346}
   delayAudioInicio: 1
   audioCuartoClick: {fileID: 729054156}
+  audiosADuckear:
+  - {fileID: 603178226}
+  duckMultiplier: 0.15
+  duckFadeTime: 0.5
+  duckDuration: 5
 --- !u!4 &1851761457
 Transform:
   m_ObjectHideFlags: 0
